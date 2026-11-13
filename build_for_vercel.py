@@ -67,4 +67,22 @@ write("sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?>\n'
       + ''.join('  <url><loc>https://maisonmatcha.live' + p + '</loc></url>\n'
                 for p in ("/", "/menu", "/matcha", "/order", "/visit"))
       + '</urlset>\n')
+# Payment instructions on the order preview page.
+payment_img = root / "payment-qr.png"
+if payment_img.exists():
+    shutil.copy2(payment_img, out / "assets" / "img" / "payment-qr.png")
+payment_markup = """<section class="mm-pay" aria-label="Payment">
+<h2>ຊຳລະເງິນ / Scan to Pay</h2>
+<p>ບັນທຶກ QR ແລ້ວຊຳລະເງິນ. ຫຼັງຈາກນັ້ນ ສົ່ງຮູບໃບໂອນໃນ WhatsApp.</p>
+<p class="en">Save the QR, make your payment, then attach your payment slip in WhatsApp.</p>
+<img src="/assets/img/payment-qr.png" alt="Maison Matcha Lao QR payment code" style="width:100%;max-width:390px;height:auto;display:block;margin:16px auto">
+<a class="btn ghost block" href="/assets/img/payment-qr.png" download="Maison-Matcha-Payment-QR.png">ບັນທຶກ QR / Save Payment QR</a>
+<p style="font-weight:700;margin-top:14px">ລໍຖ້າຮ້ານຢືນຢັນ / Awaiting shop confirmation</p>
+<p class="small">ການສົ່ງຫຼັກຖານຊຳລະບໍ່ແມ່ນການຢືນຢັນອໍເດີ. The shop will verify your payment and confirm your order.</p>
+</section>"""
+order = order.replace('<div class="actions">\\n        <a class="btn green block" id="wa"', payment_markup + '<div class="actions">\\n        <a class="btn green block" id="wa"')
+order = order.replace("L.push('ກະລຸນາຢືນຢັນການຮັບອໍເດີ ແລະ ເວລາ. ຂອບໃຈ');",
+"L.push('ຂ້ອຍຈະແນບຫຼັກຖານການຊຳລະເງິນໃນ WhatsApp. ກະລຸນາກວດສອບແລະຢືນຢັນອໍເດີ.');")
+order = order.replace('id="wa-note"', 'id="wa-note"')
+write("order/index.html", order)
 print("Built Maison Matcha:", len(list(out.rglob("*"))), "files.")
