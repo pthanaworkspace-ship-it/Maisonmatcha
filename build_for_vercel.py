@@ -81,7 +81,11 @@ payment_markup = """<section class="mm-pay" aria-label="Payment">
 <p class="small">ການສົ່ງຫຼັກຖານຊຳລະບໍ່ແມ່ນການຢືນຢັນອໍເດີ. The shop will verify your payment and confirm your order.</p>
 </section>"""
 if payment_img.exists():
-    order = order.replace('<div class="actions">\\n        <a class="btn green block" id="wa"', payment_markup + '<div class="actions">\\n        <a class="btn green block" id="wa"')
+    anchor = '<a class="btn green block" id="wa"'
+    assert anchor in order, "WhatsApp button missing from generated order page"
+    order = order.replace(anchor, payment_markup + '\n        ' + anchor, 1)
+    assert 'class="mm-pay"' in order, "Payment QR section was not inserted"
+
 order = order.replace("L.push('ກະລຸນາຢືນຢັນການຮັບອໍເດີ ແລະ ເວລາ. ຂອບໃຈ');",
 "L.push('ຂ້ອຍຈະແນບຫຼັກຖານການຊຳລະເງິນໃນ WhatsApp. ກະລຸນາກວດສອບແລະຢືນຢັນອໍເດີ.');")
 order = order.replace('id="wa-note"', 'id="wa-note"')
