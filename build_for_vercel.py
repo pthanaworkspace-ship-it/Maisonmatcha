@@ -68,7 +68,7 @@ write("sitemap.xml", '<?xml version="1.0" encoding="UTF-8"?>\n'
                 for p in ("/", "/menu", "/matcha", "/order", "/visit"))
       + '</urlset>\n')
 # Payment instructions on the order preview page.
-payment_img = root / "payment-qr.png"
+payment_img = root / "QR Code - Payment  (1).png"
 if payment_img.exists():
     shutil.copy2(payment_img, out / "assets" / "img" / "payment-qr.png")
 payment_markup = """<section class="mm-pay" aria-label="Payment">
