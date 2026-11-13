@@ -80,7 +80,8 @@ payment_markup = """<section class="mm-pay" aria-label="Payment">
 <p style="font-weight:700;margin-top:14px">ລໍຖ້າຮ້ານຢືນຢັນ / Awaiting shop confirmation</p>
 <p class="small">ການສົ່ງຫຼັກຖານຊຳລະບໍ່ແມ່ນການຢືນຢັນອໍເດີ. The shop will verify your payment and confirm your order.</p>
 </section>"""
-order = order.replace('<div class="actions">\\n        <a class="btn green block" id="wa"', payment_markup + '<div class="actions">\\n        <a class="btn green block" id="wa"')
+if payment_img.exists():
+    order = order.replace('<div class="actions">\\n        <a class="btn green block" id="wa"', payment_markup + '<div class="actions">\\n        <a class="btn green block" id="wa"')
 order = order.replace("L.push('ກະລຸນາຢືນຢັນການຮັບອໍເດີ ແລະ ເວລາ. ຂອບໃຈ');",
 "L.push('ຂ້ອຍຈະແນບຫຼັກຖານການຊຳລະເງິນໃນ WhatsApp. ກະລຸນາກວດສອບແລະຢືນຢັນອໍເດີ.');")
 order = order.replace('id="wa-note"', 'id="wa-note"')
