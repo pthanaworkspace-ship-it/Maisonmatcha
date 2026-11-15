@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="lo">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Maison Matcha · ປິດຮ້ານ</title>
+<meta name="theme-color" content="#243229">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700&family=Solway:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/staff.css">
+<style>
+.cl-wrap{max-width:640px}
+.cl-day{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
+.cl-day label.field{margin:0;flex:1;min-width:160px}
+.cl-state{margin:12px 0 0}
+.money-in{font-size:1.25rem;font-variant-numeric:tabular-nums;text-align:right;letter-spacing:.01em}
+.cl-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.cl-grid .full{grid-column:1/-1}
+@media (max-width:420px){.cl-grid{grid-template-columns:1fr}}
+.cl-sum{display:grid;gap:6px;background:var(--paper);border-radius:12px;padding:12px 14px;margin:6px 0 14px;font-size:.95rem}
+.cl-sum div{display:flex;justify-content:space-between;gap:10px}
+.cl-sum b{font-variant-numeric:tabular-nums}
+.cl-sum .tot{border-top:1px solid var(--line-soft);padding-top:8px;font-size:1.05rem}
+.cl-photos{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0 4px}
+.cl-ph{position:relative;width:96px;height:96px;border-radius:12px;overflow:hidden;background:var(--paper);border:1px solid var(--line-soft)}
+.cl-ph img{width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in}
+.cl-ph .del{position:absolute;top:4px;right:4px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:1rem;cursor:pointer}
+.cl-ph .k{position:absolute;left:0;right:0;bottom:0;font-size:.68rem;background:rgba(0,0,0,.45);color:#fff;text-align:center;padding:2px}
+.cl-add{display:flex;gap:8px;flex-wrap:wrap}
+.cl-result{border-radius:16px;padding:16px;margin-top:14px}
+.cl-result h3{margin:0 0 4px;font-size:1.15rem}
+.cl-result.ok{background:var(--green-tint);color:var(--green-deep)}
+.cl-result.short{background:var(--red-tint);color:var(--red)}
+.cl-result.over,.cl-result.types{background:var(--gold-tint);color:#6b5226}
+.cl-result.no_pos{background:var(--blue-tint);color:var(--blue)}
+.cl-result table{width:100%;margin-top:10px;font-size:.88rem;border-collapse:collapse}
+.cl-result td{padding:4px 0}.cl-result td.r{text-align:right;font-variant-numeric:tabular-nums}
+.cl-week{list-style:none;padding:0;margin:0}
+.cl-week li{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line-soft)}
+.cl-week li:first-child{border-top:0}
+.cl-week button{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left;flex:1;min-height:36px}
+.cl-week .who{font-size:.8rem;color:var(--muted)}
+.sticky-save{position:sticky;bottom:0;background:linear-gradient(to top,var(--bg, #f6f3ea) 70%,transparent);padding:14px 0 10px;margin-top:6px}
+</style>
+</head>
+<body>
+<main class="wrap cl-wrap" style="padding-bottom:60px">
+  <div class="hero"><h1>ປິດຮ້ານປະຈຳວັນ</h1><p>ນັບເງິນໃນລິ້ນຊັກ ແລະ ເງິນໂອນ ແລ້ວບັນທຶກ — ລະບົບຈະທຽບກັບ Loyverse ໃຫ້ເອງ <span class="en">· Daily closing</span></p></div>
+  <div id="body" aria-live="polite"><div class="panel muted">ກຳລັງໂຫຼດ…</div></div>
+</main>
+<script type="module" src="/staff-closing.js"></script>
+</body>
+</html>

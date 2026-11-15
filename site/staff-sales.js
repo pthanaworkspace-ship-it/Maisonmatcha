@@ -202,6 +202,7 @@ function closeForm(day) {
     <div class="row">${f('card', 'ບັດ')}${f('other', 'ອື່ນໆ')}</div>
     ${f('owner_disc', 'ສ່ວນຫຼຸດເຈົ້າຂອງ / ພະນັກງານ ທີ່ບໍ່ໄດ້ຄິດໃນ POS')}
     <label class="field"><span>ໝາຍເຫດ</span><textarea name="note" rows="2">${esc(c.note || '')}</textarea></label>
+    <p class="small"><a href="/staff/closing?day=${esc(day)}">ເປີດໜ້າປິດຮ້ານຂອງມື້ນີ້ (ຮູບບິນ, ປະຫວັດ) →</a></p>
     ${c.by_name ? `<p class="tiny muted">ບັນທຶກໂດຍ ${esc(c.by_name)}${c.source && c.source !== 'website' ? ' · ນຳເຂົ້າຈາກລະບົບບໍລິຫານ' : ''}</p>` : ''}`,
   async (v) => { await api(`/sales/closing/${day}`, { method: 'PUT', body: v }); toast('ບັນທຶກແລ້ວ', 'ok'); await load(); });
 }

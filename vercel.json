@@ -15,6 +15,10 @@
       "destination": "/staff-sales"
     },
     {
+      "source": "/staff/closing",
+      "destination": "/staff-closing"
+    },
+    {
       "source": "/staff/login",
       "destination": "/staff"
     },
