@@ -25,6 +25,10 @@
     {
       "source": "/m/:token",
       "destination": "/member"
+    },
+    {
+      "source": "/club/card",
+      "destination": "/member"
     }
   ],
   "headers": [
@@ -56,6 +60,19 @@
     },
     {
       "source": "/m/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    },
+    {
+      "source": "/club/card",
       "headers": [
         {
           "key": "X-Robots-Tag",

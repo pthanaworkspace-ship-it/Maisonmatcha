@@ -1,36 +1,46 @@
-// Matcha Club member card. All data comes from the link the café sent (after #), which never leaves this phone:
-// no server lookup, no phone number, first name only. The café's system is always the record.
+// Maison Matcha Club page: free registration (name + phone, no code). The card opens through its private link (/m/…);
+// this phone remembers the link so /club/card opens it again. A phone number alone never opens a card.
 (function () {
+  const KEY = 'mm-card-token';
+  const L = () => (window.MM_LANG ? window.MM_LANG() : 'lo');
+  const T = (lo, en) => (L() === 'en' ? en : lo);
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const DR = { latte: ['ມັດຊະລາເຕ້', 'Matcha Latte'], coconut: ['ມັດຊະນ້ຳໝາກພ້າວ', 'Coconut Matcha'], clear: ['ມັດຊະໃສ', 'Clear Matcha'], velvet: ['ໂຄໂຄນັດ ເວວເວັດ', 'Coconut Velvet'] };
-  let d = null;
-  try { const m = location.hash.match(/d=([A-Za-z0-9_-]+)/); if (m) { const b = m[1].replace(/-/g, '+').replace(/_/g, '/'); d = JSON.parse(decodeURIComponent(escape(atob(b + '==='.slice((b.length + 3) % 4))))); } } catch (e) { d = null; }
-  function qr(text) {
-    if (!window.qrcode || !text) return '';
-    const q = qrcode(0, 'M'); q.addData(text); q.make(); const k = q.getModuleCount(); let p = '';
-    for (let r = 0; r < k; r++) for (let c = 0; c < k; c++) if (q.isDark(r, c)) p += `M${c + 2} ${r + 2}h1v1h-1z`;
-    return `<svg viewBox="0 0 ${k + 4} ${k + 4}" shape-rendering="crispEdges" role="img" aria-label="QR"><rect width="100%" height="100%" fill="#fff"/><path d="${p}" fill="#1E3614"/></svg>`;
+  const get = () => { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
+  const set = (t) => { try { localStorage.setItem(KEY, t); } catch (e) { /* private mode: the link still works */ } };
+  // server messages are "Lao · English"; show the half that matches the chosen language
+  const msg = (m) => { const p = String(m || '').split(' · '); return p.length === 2 ? (L() === 'en' ? p[1] : p[0]) : String(m || ''); };
+  const reg = document.getElementById('register');
+  if (reg) reg.addEventListener('submit', async (e) => {
+    e.preventDefault(); const btn = reg.querySelector('button[type=submit]'); const err = reg.querySelector('.club-err');
+    if (btn.disabled) return; err.textContent = ''; reg.querySelectorAll('[aria-invalid]').forEach((x) => x.removeAttribute('aria-invalid'));
+    const v = Object.fromEntries(new FormData(reg));
+    if (!String(v.name || '').trim()) { err.textContent = T('ກະລຸນາໃສ່ຊື່ ແລະ ນາມສະກຸນ', 'Please enter your full name'); reg.name.focus(); return; }
+    if (String(v.phone || '').replace(/\D/g, '').length < 8) { err.textContent = T('ກະລຸນາໃສ່ເບີໂທລະສັບ', 'Please enter your phone number'); reg.phone.focus(); return; }
+    btn.disabled = true;
+    try {
+      let r; try { r = await fetch('/api/club/member/register', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: v.name, phone: v.phone, email: v.email, website: v.website }) }); }
+      catch (x) { throw new Error(T('ເຊື່ອມຕໍ່ບໍ່ໄດ້ — ກວດອິນເຕີເນັດແລ້ວລອງໃໝ່', 'No connection — check your internet and try again')); }
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw Object.assign(new Error(msg(d.error) || T('ເກີດຂໍ້ຜິດພາດ', 'Something went wrong')), { field: d.field, exists: r.status === 409 });
+      set(d.token); location.href = `/m/${encodeURIComponent(d.token)}?welcome=1`;
+    } catch (x) {
+      err.innerHTML = esc(x.message) + (x.exists ? ` <a href="#login">${T('ວິທີເປີດບັດເກົ່າ', 'How to open your card')}</a>` : '');
+      const f = x.field && reg.elements[x.field]; if (f) { f.setAttribute('aria-invalid', 'true'); f.focus(); } btn.disabled = false;
+    }
+  });
+
+  // eligible drinks (from the server, so managers' changes show here)
+  let items = null;
+  function drawItems() {
+    const ul = document.getElementById('clubElig'); if (!ul || !items) return;
+    ul.innerHTML = items.map((x) => `<li>${esc(L() === 'en' ? x.name_en : x.name_lo)}${L() === 'en' ? '' : ` <span class="en">${esc(x.name_en)}</span>`}</li>`).join('') || '<li class="muted">—</li>';
   }
-  function render() {
-    const L = window.MM_LANG ? window.MM_LANG() : 'en'; const T = (lo, en) => (L === 'en' ? en : lo);
-    const box = document.getElementById('club-card');
-    if (!d || d.v !== 1) { box.innerHTML = `<div class="info-card" style="max-width:32rem;margin:0 auto;text-align:center"><p>${T('ເປີດລິ້ງບັດທີ່ຮ້ານສົ່ງໃຫ້ທ່ານທາງ WhatsApp.', 'Open the card link the café sent you on WhatsApp.')}</p><p><a class="btn" href="/visit">${T('ຕິດຕໍ່ຮ້ານ', 'Contact the café')}</a></p></div>`; return; }
-    const fmtD = (s) => { if (!s) return '—'; try { return new Intl.DateTimeFormat(L === 'en' ? 'en-GB' : 'lo-LA', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(s + 'T00:00:00Z')); } catch (e) { return s; } };
-    const today = new Date().toISOString().slice(0, 10);
-    const rem = Math.max(0, (d.tot || 0) - (d.used || 0));
-    const expired = d.exp && today > d.exp;
-    const st = expired ? T('ໝົດອາຍຸ', 'Expired') : d.st === 'pending' ? T('ລໍຖ້າຢືນຢັນການຊຳລະ', 'Awaiting payment') : d.st === 'refunded' || d.st === 'cancelled' ? T('ປິດແລ້ວ', 'Closed') : rem <= 0 ? T('ໃຊ້ຄົບແລ້ວ', 'All drinks used') : T('ໃຊ້ງານ', 'Active');
-    const dots = Array.from({ length: Math.min(d.tot || 0, 24) }, (_, i) => `<i class="${i < d.used ? 'u' : ''}"></i>`).join('');
-    const asOf = (() => { try { return new Intl.DateTimeFormat(L === 'en' ? 'en-GB' : 'lo-LA', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Vientiane' }).format(new Date(d.at)); } catch (e) { return ''; } })();
-    box.innerHTML = `<div class="mc-card"><div class="mc-top"><img src="/assets/img/logo.webp" alt="Maison Matcha" class="mc-logo"><div class="mc-club">MATCHA CLUB<small>ສະມາຊິກມັດສະ</small></div></div>
-      ${d.fn ? `<div class="mc-name">${esc(d.fn)}</div>` : ''}<div class="mc-no num">${esc(d.no)}</div>
-      <div class="mc-body"><div><div class="mc-pkg">${esc(d.pkg)} <span class="mc-st">${st}</span></div><div class="mc-dots">${dots}</div>
-      <div class="mc-stats num"><div><b>${d.tot}</b><span>${T('ທັງໝົດ', 'Included')}</span></div><div><b>${d.used}</b><span>${T('ແລກແລ້ວ', 'Redeemed')}</span></div><div><b>${rem}</b><span>${T('ເຫຼືອ', 'Remaining')}</span></div></div>
-      <div class="mc-exp">${T('ໃຊ້ໄດ້ເຖິງ', 'Valid until')} <b>${fmtD(d.exp)}</b></div></div><div class="mc-qr">${qr(d.q)}</div></div>
-      <div class="mc-foot">FROM KYOTO TO LUANG PRABANG</div></div>
-      <p class="muted small" style="text-align:center;margin-top:14px">${T('ສະແດງ QR ນີ້ທີ່ເຄົາເຕີເພື່ອແລກເຄື່ອງດື່ມ.', 'Show this QR at the counter to redeem a drink.')}<br>${T('ຍອດ ຮອດ', 'Balance as of')} ${esc(asOf)} — ${T('ຮ້ານຈະສົ່ງລິ້ງໃໝ່ໃຫ້ຫຼັງແລກແຕ່ລະຄັ້ງ.', 'the café sends a fresh link after each visit.')}</p>
-      ${d.h && d.h.length ? `<div class="info-card" style="max-width:420px;margin:18px auto 0"><h2>${T('ປະຫວັດການແລກ', 'Redemption history')}</h2><table class="hours">${d.h.map((x) => `<tr><td>${fmtD(x[0])}</td><td>${esc(T(...(DR[x[1]] || [x[1], x[1]])))}${x[3] ? T(' · ນົມໂອ໊ດ', ' · oat milk') : ''}</td><td class="num">× ${x[2]}</td></tr>`).join('')}</table></div>` : ''}
-      <p class="muted small" style="text-align:center;margin-top:16px">${T('ເຄື່ອງດື່ມທີ່ບໍ່ໄດ້ໃຊ້ບໍ່ຍົກໄປເດືອນໜ້າ. ການຕໍ່ອາຍຸບໍ່ຕັດເງິນອັດຕະໂນມັດ.', 'Unused drinks do not carry over. Nothing renews or charges automatically.')}</p>`;
+  fetch('/api/club/member/eligible').then((r) => r.json()).then((d) => { items = d.items || []; drawItems(); }).catch(() => { const ul = document.getElementById('clubElig'); if (ul) ul.innerHTML = ''; });
+  // a card saved on this phone → "Open my card" leads
+  if (get()) {
+    const s = document.getElementById('clubSaved'); if (s) s.hidden = false;
+    const c = document.getElementById('clubCta'); const a = c && c.querySelector('a[href="/club/card"]'); const r = c && c.querySelector('a[href="#register"]');
+    if (a && r) { a.classList.add('green'); c.prepend(a); r.classList.remove('green'); r.classList.add('ghost'); }
   }
-  document.addEventListener('mm:lang', render); render();
+  document.addEventListener('mm:lang', drawItems);
 })();

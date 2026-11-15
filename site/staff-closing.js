@@ -83,8 +83,9 @@ async function render() {
 }
 function sum() {
   const f = $('#cf'); const v = (n) => num(f.elements[n].value);
-  const cash = v('cash') - v('float'); const qr = v('bcel') + v('ldb'); const tot = cash + qr + v('card') + v('other');
-  $('#sum').innerHTML = `<div><span>ເງິນສົດສຸດທິ (ຫັກເງິນທອນ)</span><b>${k(cash)}</b></div><div><span>ເງິນໂອນ BCEL + LDB</span><b>${k(qr)}</b></div><div class="tot"><span>ລວມທີ່ໄດ້ຮັບ</span><b>${k(tot)}</b></div>`;
+  const dx = (D.drawer && D.drawer.total) || 0;
+  const cash = v('cash') - v('float'); const qr = v('bcel') + v('ldb'); const tot = cash + dx + qr + v('card') + v('other');
+  $('#sum').innerHTML = `<div><span>ເງິນສົດສຸດທິ (ຫັກເງິນທອນ)</span><b>${k(cash)}</b></div>${dx ? `<div><span>ຈ່າຍຄ່າໃຊ້ຈ່າຍຈາກລິ້ນຊັກ (${D.drawer.n} ລາຍການ)</span><b>+${k(dx)}</b></div>` : ''}<div><span>ເງິນໂອນ BCEL + LDB</span><b>${k(qr)}</b></div><div class="tot"><span>ລວມທີ່ໄດ້ຮັບ</span><b>${k(tot)}</b></div>`;
 }
 function wire() {
   const f = $('#cf');

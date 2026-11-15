@@ -1,87 +1,166 @@
-// Member's own card (the private link is the key). Opening the card is purely visual: it never redeems or changes anything.
-import { esc, qrInto } from './club-common.js';
+// Maison Matcha Club — the member's own card. Opened through its private link (/m/<token>); this phone remembers the link
+// so /club/card opens it again. Live data from the server every time. Opening the card never adds stamps or redeems anything:
+// staff do that after scanning the QR (the QR identifies the member to staff only; it is not the card link).
+import { esc, qrInto, loadScript } from './club-common.js';
 
-const DR = { latte: ['ມັດຊະລາເຕ້', 'Matcha Latte'], coconut: ['ມັດຊະນ້ຳໝາກພ້າວ', 'Coconut Matcha'], clear: ['ມັດຊະໃສ', 'Clear Matcha'], velvet: ['ໂຄໂຄນັດ ເວວເວັດ', 'Coconut Velvet'] };
-const ST = {
-  active: ['ໃຊ້ງານ', 'Active', 'ok'], scheduled: ['ລໍຖ້າເລີ່ມ', 'Starts soon', 'warn'], pending: ['ລໍຖ້າຢືນຢັນການຊຳລະ', 'Awaiting payment', 'warn'],
-  used: ['ໃຊ້ຄົບແລ້ວ', 'All drinks used', 'off'], expired: ['ໝົດອາຍຸ', 'Expired', 'off'], refunded: ['ປິດແລ້ວ', 'Closed', 'off'], cancelled: ['ປິດແລ້ວ', 'Closed', 'off'],
-};
-const dLo = (d) => { if (!d) return '—'; const [y, m, x] = String(d).split('-'); return `${x}/${m}/${y}`; };
-const token = location.pathname.split('/').filter(Boolean).pop() || '';
+const KEY = 'mm-card-token';
+const saved = () => { try { return localStorage.getItem(KEY) || ''; } catch { return ''; } };
+const save = (t) => { try { if (t) localStorage.setItem(KEY, t); else localStorage.removeItem(KEY); } catch { /* private mode: the link still works */ } };
+const fromPath = (location.pathname.match(/^\/m\/([A-Za-z0-9_-]{20,80})\/?$/) || [])[1] || '';
+const TOKEN = fromPath || saved();
+const LINK = TOKEN ? `${location.origin}/m/${TOKEN}` : '';
+const WELCOME = new URLSearchParams(location.search).has('welcome');
+const dLo = (d) => { if (!d) return '—'; const x = new Date(new Date(d).getTime() + 7 * 3600e3); const p = (n) => String(n).padStart(2, '0'); return `${p(x.getUTCDate())}/${p(x.getUTCMonth() + 1)}/${x.getUTCFullYear()}`; };
 const $ = (s, r = document) => r.querySelector(s);
 const reduce = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// server messages are "Lao · English"
+const both = (m) => { const p = String(m || '').split(' · '); return p.length === 2 ? `${esc(p[0])}<br><span class="en">${esc(p[1])}</span>` : esc(m); };
 
-const kc = $('#kc'); const pocket = $('.kc-pocket', kc); const holder = $('.kc-holder', kc); const space = $('#kcSpace'); const btn = $('#kcBtn'); const main = $('.mp');
-let card = null; let details = null; let open = false; let lift = 0; let busy = 0;
+const kc = $('#kc'); const holder = $('.kc-holder', kc); const pocket = $('.kc-pocket', kc); const space = $('#kcSpace'); const btn = $('#kcBtn'); const main = $('.mp');
+let card = null; let details = null; let open = false; let lift = 0; let busy = 0; let last = null;
 const BTN_OPEN = 'ເບິ່ງບັດສະມາຊິກ <span class="en">View member card</span>';
 const BTN_CLOSE = 'ເກັບບັດ <span class="en">Put card away</span>';
 
+async function fetchCard() {
+  let r; try { r = await fetch(`/api/club/member/card/${encodeURIComponent(TOKEN)}`, { cache: 'no-store' }); }
+  catch { throw Object.assign(new Error('ເຊື່ອມຕໍ່ບໍ່ໄດ້ — ກວດອິນເຕີເນັດແລ້ວລອງໃໝ່ · No connection — check your internet and try again'), { net: true }); }
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 404) { if (saved() === TOKEN) save(''); throw Object.assign(new Error(d.error || 'ບໍ່ພົບບັດ · Card not found'), { gone: true }); }
+  if (!r.ok) throw new Error(d.error || 'ເກີດຂໍ້ຜິດພາດ · Something went wrong');
+  return d.card;
+}
+
 // ───────── content
-const STATUS = { // English line on the card · Lao line · show which date
-  active: ['Valid until', 'ໃຊ້ໄດ້ເຖິງ', 'exp'], scheduled: ['Starts on', 'ເລີ່ມໃຊ້ໄດ້', 'act'], pending: ['Awaiting payment', 'ລໍຖ້າຢືນຢັນການຊຳລະ', ''],
-  used: ['All drinks used', 'ແລກຄົບແລ້ວ', ''], expired: ['Expired', 'ໝົດອາຍຸແລ້ວ', 'exp'], refunded: ['Closed', 'ປິດແລ້ວ', ''], cancelled: ['Closed', 'ປິດແລ້ວ', ''],
-};
-const qrBox = () => '<div class="kc-qrw"><div class="kc-qr" id="kcQr" role="img" aria-label="Member QR code"></div></div>';
-const qrCap = '<div class="kc-qr-cap">ສະແດງ QR ນີ້ທີ່ເຄົາເຕີເພື່ອແລກເຄື່ອງດື່ມ<br><span class="en">Show this QR at the counter to redeem.</span></div>';
-const closeBtn = '<button class="kc-close" type="button">ເກັບບັດ · <span class="en">Put card away</span></button>';
-function detailsHtml(d) {
-  const m = d.membership;
-  const head = `<div class="kc-rule"></div><div class="kc-name${String(d.first_name || '').length > 12 ? ' long' : ''}">${esc(d.first_name || '—')}</div><div class="kc-id">${esc(d.member_no || '')}</div><div class="kc-rule"></div>`;
-  if (!m) return `${head}<div class="kc-foot"><div><div class="kc-st">No membership yet</div><div class="kc-st-lo">ຍັງບໍ່ມີແພັກເກດ — ສອບຖາມໄດ້ທີ່ເຄົາເຕີ</div></div><span class="kc-dia"></span>${qrBox()}</div>${qrCap}${closeBtn}`;
-  const total = Math.max(0, Number(m.total) || 0); const used = Math.min(total, Math.max(0, Number(m.used) || 0)); const left = Math.max(0, Number(m.rem) || 0);
-  const shown = Math.min(total, 40); const cols = shown <= 10 ? Math.max(shown, 1) : Math.ceil(shown / Math.ceil(shown / 10));
-  const dots = Array.from({ length: shown }, (_, i) => `<li class="kc-dot${i < used ? ' used' : ''}"></li>`).join('');
-  const st = STATUS[m.status] || ['—', '—', ''];
-  const date = st[2] === 'exp' ? m.expires_on : st[2] === 'act' ? m.activated_on : null;
-  const note = {
-    expired: 'ຕໍ່ອາຍຸໄດ້ທີ່ເຄົາເຕີ · <span class="en">Renew at the counter.</span>',
-    pending: 'ແລກໄດ້ເມື່ອຮ້ານຢືນຢັນການຊຳລະແລ້ວ · <span class="en">Drinks can be redeemed once the café confirms payment.</span>',
-    used: 'ຕໍ່ອາຍຸໄດ້ທີ່ເຄົາເຕີ · <span class="en">Renew at the counter.</span>',
-  }[m.status];
-  return `${head}
-    <div class="kc-plan">${esc(m.pkg_name || '')}</div>
-    <ul class="kc-dots" style="--cols:${cols}" role="img" aria-label="${used} of ${total} drinks redeemed, ${left} remaining">${dots}</ul>
-    <div class="kc-legend" aria-hidden="true"><span><i></i>ເຫຼືອ · Left</span><span><i class="u"></i>ແລກແລ້ວ · Used</span></div>
+function detailsHtml(c) {
+  const per = c.per || 10; const n = Math.min(per, Math.max(0, c.stamps));
+  const dots = Array.from({ length: per }, (_, i) => `<li class="kc-dot${i < n ? ' on' : ''}"></li>`).join('');
+  const reward = c.available > 0 ? `<div class="kc-reward" role="status">
+      <div class="kc-reward-t">YOU’VE EARNED A FREE MATCHA!</div><div class="kc-reward-lo">ທ່ານໄດ້ຮັບມັດຊະຟຣີ!${c.available > 1 ? ` × ${c.available}` : ''}</div>
+      <button class="kc-reward-b" type="button" id="kcRedeem">ແລກທີ່ Maison Matcha · <span class="en">Redeem at Maison Matcha</span></button>
+      <div class="kc-reward-n" id="kcRedeemNote" hidden>ສະແດງ QR ນີ້ໃຫ້ພະນັກງານ — ພະນັກງານຈະແລກໃຫ້ທ່ານ.<br><span class="en">Show this QR to our staff — they will redeem it for you.</span></div></div>` : '';
+  const left = c.available > 0 && n === 0 ? '' : `<div class="kc-next">${c.to_next} MORE ${c.to_next === 1 ? 'CUP' : 'CUPS'} TO YOUR FREE MATCHA<span>ອີກ ${c.to_next} ຈອກ ຮັບມັດຊະຟຣີ 1 ຈອກ</span></div>`;
+  const st = `<div class="kc-st">Member since</div><div class="kc-st-d">${dLo(c.joined)}</div><div class="kc-st-lo">ເປັນສະມາຊິກຕັ້ງແຕ່</div>`;
+  return `<div class="kc-rule"></div>
+    <div class="kc-lbl">MEMBER NAME · ຊື່ສະມາຊິກ</div><div class="kc-name${String(c.name || '').length > 22 ? ' long' : ''}">${esc(c.name)}</div>
+    <div class="kc-lbl">MEMBER ID · ລະຫັດສະມາຊິກ</div><div class="kc-id">${esc(c.member_no)}</div>
+    <div class="kc-rule"></div>
+    <div class="kc-plan">YOUR MATCHA STAMPS <span>ສະແຕັມມັດຊະຂອງທ່ານ</span></div>
+    <ul class="kc-dots" role="img" aria-label="${n} of ${per} stamps">${dots}</ul>
+    <div class="kc-count"><b>${n} / ${per}</b> STAMPS <span>ສະແຕັມ</span></div>
+    ${left}${reward}
+    ${c.owed ? `<div class="kc-note">${c.owed} stamp(s) to make up after a refund · ຕ້ອງສະສົມຄືນ ${c.owed} ສະແຕັມ ຫຼັງການຄືນເງິນ</div>` : ''}
     <div class="kc-rule"></div>
     <div class="kc-stats">
-      <div><b>${total}</b><small>Total</small><span>ທັງໝົດ</span></div>
-      <div><b>${used}</b><small>Used</small><span>ແລກແລ້ວ</span></div>
-      <div><b>${left}</b><small>Left</small><span>ເຫຼືອ</span></div>
+      <div><b>${c.available}</b><small>Available free drinks</small><span>ເຄື່ອງດື່ມຟຣີທີ່ແລກໄດ້</span></div>
+      <div><b>${c.purchased}</b><small>Total drinks purchased</small><span>ເຄື່ອງດື່ມທີ່ຊື້ທັງໝົດ</span></div>
+      <div><b>${c.redeemed}</b><small>Total rewards redeemed</small><span>ແລກຂອງລາງວັນແລ້ວ</span></div>
     </div>
     <div class="kc-rule"></div>
-    <div class="kc-foot">
-      <div><div class="kc-st">${esc(st[0])}</div>${date ? `<div class="kc-st-d">${dLo(date)}</div>` : ''}<div class="kc-st-lo">${esc(st[1])}</div></div>
-      <span class="kc-dia" aria-hidden="true"></span>${qrBox()}
-    </div>
-    ${note ? `<div class="kc-note">${note}</div>` : ''}${qrCap}${closeBtn}`;
+    <div class="kc-foot"><div>${st}</div><span class="kc-dia" aria-hidden="true"></span>
+      <div class="kc-qrw"><div class="kc-qr" id="kcQr" role="img" aria-label="Member QR code"></div></div></div>
+    <div class="kc-qr-cap">ສະແດງ QR ນີ້ທີ່ເຄົາເຕີ ເພື່ອສະສົມສະແຕັມ ຫຼື ແລກມັດຊະຟຣີ<br><span class="en">Show this QR at the counter to collect stamps or redeem a free matcha.</span></div>
+    <button class="kc-close" type="button">ເກັບບັດ · <span class="en">Put card away</span></button>`;
+}
+const KIND = { earn: ['+', 'ສະແຕັມ', 'stamps'], refund: ['−', 'ຄືນເງິນ', 'refund'], adjust: ['±', 'ປັບໂດຍຮ້ານ', 'adjusted by the café'], reward: ['★', 'ໄດ້ຮັບມັດຊະຟຣີ', 'free matcha earned'], redeemed: ['☕', 'ແລກມັດຊະຟຣີ', 'free matcha redeemed'] };
+function extraHtml(c) {
+  const h = c.history || [];
+  return `${h.length ? `<section class="mp-panel"><h2>ປະຫວັດ <span class="en" style="font-weight:400;color:var(--muted);font-size:.85rem">· History</span></h2><table class="mp-hist">${h.map((x) => {
+    const k = KIND[x.kind] || ['', x.kind, x.kind]; const q = x.kind === 'reward' || x.kind === 'redeemed' ? '' : `${x.qty > 0 ? '+' : ''}${x.qty}`;
+    return `<tr><td>${dLo(x.at)}</td><td>${esc(k[1])}${x.drink ? ` · ${esc(x.drink.lo)}` : ''}<div class="s en">${esc(k[2])}${x.drink ? ` · ${esc(x.drink.en)}` : ''}</div></td><td class="r">${esc(q || k[0])}</td></tr>`;
+  }).join('')}</table></section>` : ''}
+    <div class="mp-links"><button type="button" class="kc-link" id="forgetBtn">ລຶບບັດອອກຈາກໂທລະສັບນີ້ · <span class="en">Remove card from this phone</span></button></div>
+    <p class="mp-fine">ສະມັກຟຣີ · ເຄື່ອງດື່ມຟຣີບໍ່ໄດ້ຮັບສະແຕັມ · ສະແຕັມ ແລະ ຂອງລາງວັນບໍ່ມີວັນໝົດອາຍຸ<br><span class="en">Free membership · Free drinks don’t earn stamps · Stamps and rewards don’t expire</span></p>`;
 }
 
-function extraHtml(d) {
-  const h = d.history || [];
-  return `${h.length ? `<section class="mp-panel"><h2>ປະຫວັດການແລກ <span class="en" style="font-weight:400;color:var(--muted);font-size:.85rem">· History</span></h2><table class="mp-hist">${h.map((x) => `<tr><td>${dLo(x.date)}</td><td>${esc((DR[x.drink] || [x.drink])[0])}${x.milk === 'oat' ? ' · ນົມໂອ໊ດ' : ''}<div class="s en">${esc((DR[x.drink] || ['', x.drink])[1])}${x.milk === 'oat' ? ' · oat milk' : ''}</div></td><td class="r">× ${Number(x.qty) || 0}</td></tr>`).join('')}</table></section>` : ''}
-    <p class="mp-fine">ຈອກທີ່ບໍ່ໄດ້ໃຊ້ບໍ່ຍົກໄປ · ບໍ່ມີການຕັດເງິນ ຫຼື ຕໍ່ອາຍຸອັດຕະໂນມັດ<br><span class="en">Unused drinks do not carry over. Nothing renews or charges automatically.</span></p>`;
-}
-
-function build(d) {
+function build(c) {
   if (!card) {
     card = document.createElement('article');
     card.className = 'kc-card'; card.id = 'kcCard'; card.tabIndex = -1;
     card.innerHTML = `<div class="kc-peek" aria-hidden="true"><img src="/logo.webp" alt=""><div class="kc-peek-t">MEMBER CARD</div></div>
-      <div class="kc-face"><header class="kc-fh"><img src="/logo.webp" alt="Maison Matcha"><span class="kc-dia" aria-hidden="true"></span><div class="kc-fh-r"><b>MATCHA CLUB</b><span>ສະມາຊິກມັດຊະ</span></div></header>
+      <div class="kc-face"><header class="kc-fh"><img src="/logo.webp" alt="Maison Matcha"><span class="kc-dia" aria-hidden="true"></span><div class="kc-fh-r"><b>MAISON MATCHA CLUB</b><span>ສະມາຊິກ Maison Matcha</span></div></header>
       <div id="kcDetails"></div></div>`;
     pocket.insertBefore(card, holder);
     details = $('#kcDetails', card);
-    card.addEventListener('click', (e) => { if (!open && !e.target.closest('button')) toggle(true); });
-    card.addEventListener('click', (e) => { if (e.target.closest('.kc-close')) toggle(false); });
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.kc-close')) { toggle(false); return; }
+      if (e.target.closest('#kcRedeem')) { const n = $('#kcRedeemNote', card); n.hidden = false; $('#kcQr', card).classList.add('pulse'); $('#kcQr', card).scrollIntoView({ block: 'center', behavior: reduce() ? 'auto' : 'smooth' }); return; }
+      if (!open && !e.target.closest('button')) toggle(true);
+    });
     if ('ResizeObserver' in window) new ResizeObserver(measure).observe(card);
   }
-  details.innerHTML = detailsHtml(d);
+  details.innerHTML = detailsHtml(c);
   details.inert = !open; details.setAttribute('aria-hidden', String(!open));
-  card.setAttribute('aria-label', `Matcha Club · ${d.first_name || ''} · ${d.member_no || ''}`);
-  kc.classList.toggle('is-off', !!(d.membership && ['expired', 'refunded', 'cancelled'].includes(d.membership.status)));
-  qrInto($('#kcQr', card), d.card_url);
-  $('#extra').innerHTML = extraHtml(d);
+  card.setAttribute('aria-label', `Maison Matcha Club · ${c.name} · ${c.member_no}`);
+  kc.classList.toggle('is-reward', c.available > 0);
+  qrInto($('#kcQr', card), c.qr);
+  $('#extra').innerHTML = extraHtml(c); wireExtra();
   measure();
+}
+function wireExtra() {
+  $('#forgetBtn').addEventListener('click', () => {
+    if (!confirm('ລຶບບັດອອກຈາກໂທລະສັບນີ້? ທ່ານຍັງເປີດໄດ້ດ້ວຍລິ້ງບັດ.\nRemove the card from this phone? You can still open it with your card link.')) return;
+    save(''); location.href = '/club';
+  });
+}
+
+// ───────── save the card: image (QR for the counter), link, Home Screen
+function saveHtml() {
+  return `<section class="mp-panel mp-save" id="saveCard"><h2>ບັນທຶກບັດສະມາຊິກ <span class="en">· Save Membership Card</span></h2>
+    <div class="mp-save-b">
+      <button type="button" class="kc-btn" id="saveImg">ບັນທຶກເປັນຮູບ <span class="en">Save as image</span></button>
+      <button type="button" class="kc-btn ghost" id="copyLink">ສຳເນົາລິ້ງບັດ <span class="en">Copy card link</span></button>
+      ${navigator.share ? '<button type="button" class="kc-btn ghost" id="shareLink">ແບ່ງປັນລິ້ງ <span class="en">Share link</span></button>' : ''}
+    </div>
+    <input class="mp-linkbox" id="linkBox" readonly value="${esc(LINK)}" aria-label="Card link">
+    <p class="mp-note" id="saveMsg" role="status"></p>
+    <details class="mp-home"><summary>ເພີ່ມໃສ່ໜ້າຈໍຫຼັກ <span class="en">· Add to Home Screen</span></summary>
+      <p><b>iPhone (Safari):</b> ແຕະ Share → <b>Add to Home Screen</b> → Add.<br><span class="en">Tap Share → Add to Home Screen → Add.</span></p>
+      <p><b>Android (Chrome):</b> ແຕະ ⋮ → <b>Add to Home screen</b> → Add.<br><span class="en">Tap ⋮ → Add to Home screen → Add.</span></p>
+      <p class="tiny">ເຮັດໃນໜ້ານີ້ ເພື່ອໃຫ້ໄອຄອນເປີດບັດຂອງທ່ານໂດຍກົງ. <span class="en">Do this on this page so the icon opens your card.</span></p></details>
+    <p class="tiny">ຮູບບັດໃຊ້ສະແດງ QR ທີ່ເຄົາເຕີ — ຈຳນວນສະແຕັມທີ່ຖືກຕ້ອງເບິ່ງໄດ້ໃນລິ້ງບັດສະເໝີ. ຢ່າແບ່ງປັນລິ້ງໃຫ້ຄົນອື່ນ.<br><span class="en">The image is for showing your QR at the counter — your live stamp count is always on your card link. Keep the link to yourself.</span></p></section>`;
+}
+function say(t) { const m = $('#saveMsg'); if (m) m.innerHTML = t; }
+function wireSave() {
+  $('#copyLink').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(LINK); say('ສຳເນົາແລ້ວ · <span class="en">Link copied</span>'); }
+    catch { const b = $('#linkBox'); b.focus(); b.select(); say('ກົດຄ້າງເພື່ອສຳເນົາ · <span class="en">Press and hold to copy</span>'); }
+  });
+  $('#shareLink')?.addEventListener('click', async () => { try { await navigator.share({ title: 'Maison Matcha Club', url: LINK }); } catch { /* cancelled */ } });
+  $('#saveImg').addEventListener('click', async (e) => {
+    const b = e.currentTarget; if (b.disabled || !last) return; b.disabled = true;
+    try {
+      const blob = await cardImage(last); const file = new File([blob], `MaisonMatchaClub-${last.member_no}.png`, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: 'Maison Matcha Club' }); } catch { /* cancelled */ } }
+      else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }
+      say('ຮູບບັດພ້ອມແລ້ວ · <span class="en">Card image ready — keep it in your photos</span>');
+    } catch { say('ບັນທຶກຮູບບໍ່ໄດ້ — ລອງຖ່າຍໜ້າຈໍແທນ · <span class="en">Couldn’t create the image — take a screenshot instead</span>'); } finally { b.disabled = false; }
+  });
+}
+// The saved image shows who the member is and the QR. No stamp count: that is only ever read live from the café's system.
+async function cardImage(c) {
+  await loadScript('/qrcode.js');
+  const W = 1080; const H = 1500; const cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+  const font = (w, s, f = 'Cormorant Garamond, Georgia, serif') => `${w} ${s}px ${f}`;
+  g.fillStyle = '#1F5A36'; g.fillRect(0, 0, W, H);
+  const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+  g.fillStyle = '#F7F2E6'; rr(60, 60, W - 120, H - 120, 48); g.fill();
+  const logo = await new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = '/logo.webp'; });
+  if (logo) { const h = 150; g.drawImage(logo, 120, 120, h * logo.width / logo.height, h); }
+  g.fillStyle = '#1E4F31'; g.textAlign = 'right'; g.font = font('600', 40); g.fillText('MAISON MATCHA CLUB', W - 120, 190);
+  g.font = font('500', 32, 'Noto Sans Lao, sans-serif'); g.fillText('ສະມາຊິກ Maison Matcha', W - 120, 240);
+  g.fillRect(120, 320, W - 240, 2);
+  g.textAlign = 'left'; g.font = font('600', 30); g.globalAlpha = 0.75; g.fillText('MEMBER NAME', 120, 385); g.globalAlpha = 1;
+  g.font = font('600', c.name.length > 22 ? 56 : 72); g.fillText(c.name.toUpperCase().slice(0, 34), 120, 465);
+  g.font = font('600', 30); g.globalAlpha = 0.75; g.fillText('MEMBER ID', 120, 535); g.globalAlpha = 1;
+  g.font = font('500', 54); g.fillText(c.member_no.split('').join(' '), 120, 600);
+  g.fillRect(120, 650, W - 240, 2);
+  const q = window.qrcode(0, 'M'); q.addData(c.qr); q.make(); const k = q.getModuleCount(); const cell = Math.floor(560 / (k + 4)); const qs = cell * (k + 4); const qx = Math.round((W - qs) / 2); const qy = 700;
+  g.fillStyle = '#FFFFFF'; g.fillRect(qx, qy, qs, qs); g.fillStyle = '#123A22';
+  for (let r = 0; r < k; r++) for (let col = 0; col < k; col++) if (q.isDark(r, col)) g.fillRect(qx + (col + 2) * cell, qy + (r + 2) * cell, cell, cell);
+  g.textAlign = 'center'; g.fillStyle = '#1E4F31'; g.font = font('500', 34, 'Noto Sans Lao, sans-serif'); g.fillText('ສະແດງ QR ນີ້ທີ່ເຄົາເຕີ', W / 2, qy + qs + 70);
+  g.font = font('500', 30, 'Solway, Georgia, serif'); g.fillText('Show this QR at the counter', W / 2, qy + qs + 115);
+  g.font = font('600', 28); g.globalAlpha = 0.8; g.fillText('BUY 10 DRINKS, GET 1 FREE · LIVE STAMPS ON YOUR CARD LINK', W / 2, H - 120); g.globalAlpha = 1;
+  return new Promise((res, rej) => cv.toBlob((b) => (b ? res(b) : rej(new Error('blob'))), 'image/png'));
 }
 
 // ───────── geometry: the card is clipped at the holder's bottom edge, so the holder can be shorter than the card
@@ -139,40 +218,38 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && open) to
 window.addEventListener('resize', measure);
 
 // ───────── data (refreshes when the member comes back to the page; open state is kept)
+function welcome(c) {
+  const w = document.createElement('section'); w.className = 'mp-welcome'; w.setAttribute('role', 'status');
+  w.innerHTML = `<div class="mp-welcome-t">Welcome to Maison Matcha Club!</div><div class="mp-welcome-lo">ຍິນດີຕ້ອນຮັບສູ່ Maison Matcha Club</div>
+    <div class="mp-welcome-s">Your Matcha Journey Starts Here.</div><div class="mp-welcome-c"><b>${c.stamps} / ${c.per}</b> STAMPS</div>
+    <div class="mp-welcome-r">Buy 10 Drinks, Get 1 Free <span>ຊື້ຄົບ 10 ຈອກ ຮັບຟຣີ 1 ຈອກ</span></div>
+    <a class="kc-btn" href="#saveCard">ບັນທຶກບັດສະມາຊິກ <span class="en">Save Membership Card</span></a>`;
+  $('.mp-head').after(w);
+  history.replaceState(null, '', location.pathname);
+}
+function missing(text) {
+  kc.classList.remove('is-loading'); $('.kc-skel', kc)?.remove(); btn.hidden = true;
+  $('#extra').innerHTML = `<div class="kc-msg">${text}<div class="mp-links"><a class="kc-btn" href="/club#register">ລົງທະບຽນ <span class="en">Register</span></a><a class="kc-btn ghost" href="/club#login">ເປີດບັດເກົ່າ <span class="en">Returning member</span></a></div></div>`;
+}
 async function load() {
-  let d;
-  try {
-    if (!/^[A-Za-z0-9_-]{20,80}$/.test(token)) throw new Error('bad');
-    const r = await fetch(`/api/club/public/card/${encodeURIComponent(token)}`, { cache: 'no-store' });
-    if (!r.ok) throw new Error(String(r.status)); d = await r.json();
-  } catch (e) {
+  if (!TOKEN) { missing('ຍັງບໍ່ມີບັດບັນທຶກໃນໂທລະສັບນີ້. ເປີດລິ້ງບັດຂອງທ່ານ ຫຼື ລົງທະບຽນຟຣີ.<br><span class="en">No card is saved on this phone. Open your card link, or register for free.</span>'); return; }
+  let c;
+  try { c = await fetchCard(); } catch (e) {
     if (card) return; // keep showing the last good card if a refresh fails
-    kc.classList.remove('is-loading'); $('.kc-skel', kc)?.remove();
-    btn.hidden = true;
-    $('#extra').innerHTML = `<div class="kc-msg">${e.message === 'bad' || e.message === '404' ? 'ບໍ່ພົບບັດນີ້ — ກະລຸນາກວດລິ້ງ ຫຼື ຕິດຕໍ່ຮ້ານ<br><span class="en">Card not found — check the link or contact the café.</span>' : 'ໂຫຼດບັດບໍ່ໄດ້ — ກວດອິນເຕີເນັດແລ້ວລອງໃໝ່<br><span class="en">Couldn’t load your card — check your connection and try again.</span><br><button class="kc-btn" type="button" id="retry" style="margin-top:12px">ລອງໃໝ່ <span class="en">Retry</span></button>'}</div>`;
+    if (e.gone) { missing(`${both(e.message)}<br><br>ຖ້າລິ້ງຖືກປ່ຽນ, ໃຊ້ລິ້ງໃໝ່ທີ່ຮ້ານສົ່ງໃຫ້ ຫຼື ຂໍໃຫ້ພະນັກງານຊ່ວຍ.<br><span class="en">If your link was replaced, use the new link from the café or ask our staff.</span>`); return; }
+    kc.classList.remove('is-loading'); $('.kc-skel', kc)?.remove(); btn.hidden = true;
+    $('#extra').innerHTML = `<div class="kc-msg">${both(e.message)}<br><button class="kc-btn" type="button" id="retry" style="margin-top:12px">ລອງໃໝ່ <span class="en">Retry</span></button></div>`;
     $('#retry')?.addEventListener('click', () => location.reload());
     return;
   }
+  if (fromPath) save(fromPath); // remember this card on this phone
+  last = c;
   kc.classList.remove('is-loading'); $('.kc-skel', kc)?.remove();
-  build(d);
+  const first = !card; const keep = $('#saveCard');
+  build(c);
+  if (keep) $('#extra').prepend(keep); else { $('#extra').insertAdjacentHTML('afterbegin', saveHtml()); wireSave(); }
   btn.disabled = false; btn.hidden = false; if (!open) btn.innerHTML = BTN_OPEN;
-  wallet(d);
-}
-
-// ───────── Apple Wallet: only on Apple devices, only when the server can sign passes, only with Apple's official badge
-const isApple = () => /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent);
-function wallet(d) {
-  const box = $('#kcWallet'); if (!box || !d.wallet || !isApple()) { if (box) box.hidden = true; return; }
-  if (box.dataset.ready) { box.hidden = false; return; }
-  const img = new Image();
-  img.onload = () => {
-    box.dataset.ready = '1';
-    box.innerHTML = `<a href="/api/club/wallet/pass/${encodeURIComponent(token)}.pkpass" rel="nofollow"><img src="${img.src}" alt="Add to Apple Wallet"></a>
-      <p>ເພີ່ມບັດໃສ່ Apple Wallet — ຍອດເຫຼືອຈະອັບເດດເອງ<br><span class="en">Your balance updates automatically in Wallet.</span></p>`;
-    box.hidden = false;
-  };
-  img.onerror = () => { box.hidden = true; }; // badge artwork not installed yet → no button
-  img.src = '/wallet/add-to-apple-wallet.svg';
+  if (first && WELCOME) { welcome(c); setTimeout(() => toggle(true), reduce() ? 0 : 450); }
 }
 load();
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && card) load(); });

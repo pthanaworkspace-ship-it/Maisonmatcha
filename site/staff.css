@@ -389,3 +389,23 @@ dialog.wide-dlg { width: min(640px, calc(100vw - 20px)); }
 dialog .row { flex-wrap: wrap; }
 .topbar .wrap { flex-wrap: wrap; row-gap: 6px; }
 @media (max-width: 560px) { .topbar .who { display: none; } .topbar .btn.small { padding: 6px 10px; } }
+/* ───── Maison Matcha Club (loyalty) */
+.lc-head { display: flex; gap: 14px; align-items: center; justify-content: space-between; background: var(--paper); border-radius: 14px; padding: 14px; }
+.lc-big { font-size: 2.4rem; line-height: 1; font-weight: 500; } .lc-big small { font-size: 1rem; color: var(--muted); }
+.lc-dots { display: grid; grid-template-columns: repeat(5, 18px); gap: 6px; margin-top: 8px; }
+.lc-dots i { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--green); }
+.lc-dots i.on { background: var(--green); }
+.lc-gift { text-align: center; background: var(--card); border-radius: 12px; padding: 8px 14px; min-width: 96px; }
+.lc-gift b { display: block; font-size: 1.8rem; line-height: 1.1; } .lc-gift span { font-size: .72rem; color: var(--muted); font-family: var(--font-lao); }
+.lc-gift.on { background: var(--gold-tint); outline: 2px solid var(--gold); }
+.lc-actions { margin-top: 12px; } .lc-actions .btn { flex: 1 1 160px; min-height: 48px; }
+.drink { position: relative; padding: 0; display: flex; align-items: stretch; }
+button.drink { padding: 12px; display: block; }
+.drink .lc-add { flex: 1; background: none; border: 0; text-align: left; padding: 12px; font: inherit; color: inherit; cursor: pointer; min-height: 56px; }
+.lc-q { display: flex; align-items: center; gap: 6px; padding-right: 8px; }
+.lc-q button { width: 34px; height: 34px; border-radius: 50%; border: 1px solid currentColor; background: none; color: inherit; font-size: 1.1rem; cursor: pointer; }
+.lc-q b { min-width: 1.4em; text-align: center; font-size: 1.1rem; }
+.lc-link-qr { width: min(240px, 70vw); margin: 10px auto 0; } .lc-link-qr svg { width: 100%; height: auto; display: block; }
+.lc-flow { margin: 0 0 12px; padding-left: 20px; font-family: var(--font-lao); } .lc-flow li { margin-bottom: 4px; }
+.lc-lv { width: 100%; min-width: 120px; min-height: 36px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 8px; font-size: .82rem; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
