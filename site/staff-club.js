@@ -398,6 +398,32 @@ async function staffUsers() {
     async (v) => { const body = { display_name: v.display_name, role: v.role, active: !!v.active }; if (v.password) body.password = v.password; await api(`/users/${u.id}`, { method: 'PATCH', body }); toast('ບັນທຶກແລ້ວ', 'ok'); render(); });
   }));
 }
+// ───────── Loyverse link (admin)
+async function loyverseTab() {
+  const d = await api('/loyverse'); const c = d.cfg; const opt = (list, sel) => `<option value="">— ເລືອກ —</option>${(list || []).map((x) => `<option value="${esc(x.id)}" ${x.id === sel ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}`;
+  const n = d.counts || {}; const ST2 = { sent: ['ສົ່ງແລ້ວ', 'pay-paid'], failed: ['ບໍ່ສຳເລັດ', 'pay-rejected'], pending: ['ລໍຖ້າ', 'pay-pending_verification'], sending: ['ກຳລັງສົ່ງ', 'pay-deposit'], skipped: ['ຂ້າມ', 'st-cancelled'] };
+  const KIND = { redemption: 'ເຄື່ອງດື່ມສະມາຊິກ (0 ₭)', oat: 'ຄ່ານົມໂອ໊ດ', membership: 'ຂາຍສະມາຊິກ' };
+  const pk = (d.packages || []).map((p) => `<li>Matcha Club – ${esc(p.name)} ${c.items.pkg && c.items.pkg[p.id] ? '✓' : '—'}</li>`).join('');
+  $('#body').innerHTML = `<div class="panel"><h2>Loyverse</h2>
+    ${!d.token ? '<div class="alert err">ບໍ່ພົບ LOYVERSE_TOKEN ໃນ Supabase — ເພີ່ມໃນ Edge Function Secrets.</div>' : d.error ? `<div class="alert err">ເຊື່ອມຕໍ່ Loyverse ບໍ່ໄດ້: ${esc(d.error)}</div>` : `<div class="alert ${d.ready ? 'ok' : 'warn'}">${d.ready ? 'ເຊື່ອມຕໍ່ແລ້ວ — ສົ່ງໃບບິນເຂົ້າ Loyverse ອັດຕະໂນມັດ' : 'ເຊື່ອມຕໍ່ Loyverse ໄດ້ — ຕັ້ງຄ່າໃຫ້ຄົບແລ້ວເປີດໃຊ້'}</div>`}
+    <p class="small muted">ເຄື່ອງດື່ມສະມາຊິກ → ໃບບິນ 0 ₭ “Matcha Club Redemption”. ຄ່ານົມໂອ໊ດ → ໃບບິນແຍກເມື່ອໄດ້ຮັບເງິນ. ຂາຍສະມາຊິກ → ໃບບິນເມື່ອຢືນຢັນການຊຳລະ. ຄືນເງິນ ແລະ ການຍົກເລີກການແລກ ໃຫ້ເຮັດໃນ Loyverse ດ້ວຍຕົນເອງ.</p>
+    <form id="lvF" class="stack">
+      <label class="field"><span>ຮ້ານໃນ Loyverse</span><select name="store_id">${opt(d.stores, c.store_id)}</select></label>
+      <div class="row"><label class="field"><span>ເງິນສົດ →</span><select name="cash">${opt(d.payment_types, c.pay.cash)}</select></label><label class="field"><span>ໂອນທະນາຄານ →</span><select name="transfer">${opt(d.payment_types, c.pay.transfer)}</select></label><label class="field"><span>QR →</span><select name="qr">${opt(d.payment_types, c.pay.qr)}</select></label></div>
+      <div class="row"><button class="btn" type="submit">ບັນທຶກ</button><button class="btn ghost" type="button" id="lvItems">ຊອກຫາ / ສ້າງສິນຄ້າ Matcha Club ໃນ Loyverse</button></div>
+    </form>
+    <div class="small" style="margin-top:10px"><b>ສິນຄ້າໃນ Loyverse</b> (ປິດການນັບສະຕັອກ)<ul><li>Matcha Club Redemption ${c.items.redeem ? '✓' : '—'}</li><li>Matcha Club Oat Upgrade ${c.items.oat ? '✓' : '—'}</li>${pk}</ul></div>
+    <div class="row" style="margin-top:10px"><label class="check"><input type="checkbox" id="lvOn" ${c.enabled ? 'checked' : ''}> ເປີດການສົ່ງໃບບິນເຂົ້າ Loyverse</label><button class="btn ghost small" type="button" id="lvTest">ສົ່ງໃບບິນທົດລອງ (0 ₭)</button></div></div>
+  <div class="panel"><div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">ປະຫວັດການສົ່ງ</h2><button class="btn small" id="lvRetry" ${n.failed || n.pending ? '' : 'disabled'}>ສົ່ງລາຍການທີ່ບໍ່ສຳເລັດອີກຄັ້ງ</button></div>
+    <p class="small">ສົ່ງແລ້ວ ${n.sent || 0} · ບໍ່ສຳເລັດ ${n.failed || 0} · ລໍຖ້າ ${(n.pending || 0) + (n.sending || 0)}</p>
+    <div class="table-wrap"><table class="simple"><thead><tr><th>ເວລາ</th><th>ປະເພດ</th><th>ສະຖານະ</th><th>ໃບບິນ Loyverse</th></tr></thead><tbody>${(d.recent || []).map((x) => `<tr><td class="small num">${laoDateTime(x.updated_at)}</td><td>${KIND[x.kind] || x.kind} <span class="tiny muted">#${x.ref_id}</span></td><td><span class="chip ${(ST2[x.status] || ['', ''])[1]}">${(ST2[x.status] || [x.status])[0]}</span>${x.error ? `<div class="tiny">${esc(x.error)}</div>` : ''}</td><td class="num">${esc(x.receipt_number || '')}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">ຍັງບໍ່ມີ</td></tr>'}</tbody></table></div></div>`;
+  $('#lvF').addEventListener('submit', (e) => { e.preventDefault(); guard(e.submitter || $('#lvF button'), async () => { const v = Object.fromEntries(new FormData(e.target)); await api('/loyverse', { method: 'PATCH', body: { store_id: v.store_id, pay: { cash: v.cash, transfer: v.transfer, qr: v.qr } } }); toast('ບັນທຶກແລ້ວ', 'ok'); render(); }); });
+  $('#lvItems').addEventListener('click', (e) => guard(e.currentTarget, async () => { const v = Object.fromEntries(new FormData($('#lvF'))); await api('/loyverse', { method: 'PATCH', body: { store_id: v.store_id, pay: { cash: v.cash, transfer: v.transfer, qr: v.qr } } }); const r = await api('/loyverse/setup-items', { method: 'POST', body: {} }); toast(`ພົບ ${r.found.length} · ສ້າງ ${r.created.length}${r.failed.length ? ` · ບໍ່ສຳເລັດ ${r.failed.length}` : ''}`, r.failed.length ? 'err' : 'ok'); render(); }));
+  $('#lvOn').addEventListener('change', (e) => guard(e.currentTarget, async () => { try { await api('/loyverse', { method: 'PATCH', body: { enabled: e.target.checked } }); toast('ບັນທຶກແລ້ວ', 'ok'); } finally { render(); } }));
+  $('#lvTest').addEventListener('click', (e) => guard(e.currentTarget, async () => { const r = await api('/loyverse/test', { method: 'POST', body: {} }); toast(`ສົ່ງແລ້ວ — ໃບບິນ ${r.receipt_number || ''}`, 'ok'); }));
+  $('#lvRetry').addEventListener('click', (e) => guard(e.currentTarget, async () => { const r = await api('/loyverse/retry', { method: 'POST', body: {} }); toast(`ສົ່ງອີກຄັ້ງ ${r.retried} ລາຍການ`, 'ok'); render(); }));
+}
+
 
 // ───────── shell
 function actions(t) {
@@ -408,7 +434,7 @@ function actions(t) {
 }
 async function render() {
   $$('#tabs input').forEach((i) => { i.checked = i.value === TAB; });
-  try { await ({ ov: overview, red: redemptions, stock, rep: report, set: settings, users: staffUsers }[TAB] || overview)(); } catch (e) { $('#body').innerHTML = `<div class="alert err">${esc(e.message)}</div>`; }
+  try { await ({ ov: overview, red: redemptions, stock, rep: report, set: settings, users: staffUsers, lv: loyverseTab }[TAB] || overview)(); } catch (e) { $('#body').innerHTML = `<div class="alert err">${esc(e.message)}</div>`; }
 }
 (async () => {
   ME = await initStaff();
