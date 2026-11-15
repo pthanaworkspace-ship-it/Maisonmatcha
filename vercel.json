@@ -1,4 +1,63 @@
 {
   "cleanUrls": true,
-  "trailingSlash": false
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/api/club/:path*",
+      "destination": "https://npjzxcuhenbdzxquralv.supabase.co/functions/v1/club/:path*"
+    },
+    {
+      "source": "/staff/club",
+      "destination": "/staff-club.html"
+    },
+    {
+      "source": "/staff/login",
+      "destination": "/staff.html"
+    },
+    {
+      "source": "/m/:token",
+      "destination": "/member.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/staff",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    },
+    {
+      "source": "/staff/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    },
+    {
+      "source": "/m/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
+    }
+  ]
 }

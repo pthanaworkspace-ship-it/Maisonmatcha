@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="lo">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maison Matcha · ສັ່ງອໍເດີ</title>
+<meta name="description" content="Order Maison Matcha drinks and send the order to the shop on WhatsApp.">
+<meta name="theme-color" content="#243229">
+<meta property="og:title" content="Maison Matcha · ສັ່ງອໍເດີ">
+<meta property="og:description" content="Order Maison Matcha drinks and send the order to the shop on WhatsApp.">
+<meta property="og:image" content="/assets/img/og.jpg">
+<link rel="icon" href="/assets/img/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700&family=Solway:wght@300;400;500;700&display=swap">
+<link rel="stylesheet" href="/assets/site.css">
+<script>try{var l=JSON.parse(localStorage.getItem('mm-lang')||'null');if(l==='en'||l==='lo')document.documentElement.lang=l}catch(e){}</script>
+<meta name="robots" content="index">
+</head>
+<body>
+<header class="site-head">
+  <div class="wrap head-row">
+    <a class="logo-link" href="/" aria-label="Maison Matcha"><img src="/assets/img/logo.webp" alt="Maison Matcha" width="360" height="308"></a>
+    <nav class="site-nav" aria-label="Maison Matcha"><a href="/"><span data-l="lo">ໜ້າຫຼັກ</span><span data-l="en">Home</span></a><a href="/menu"><span data-l="lo">ເມນູ</span><span data-l="en">Menu</span></a><a href="/matcha"><span data-l="lo">ມັດຊະຂອງເຮົາ</span><span data-l="en">Our matcha</span></a><a href="/order" aria-current="page" class="nav-cta"><span data-l="lo">ສັ່ງອໍເດີ</span><span data-l="en">Order</span></a><a href="/visit"><span data-l="lo">ຕິດຕໍ່ & ທີ່ຕັ້ງ</span><span data-l="en">Visit</span></a></nav>
+    <div class="lang" role="group" aria-label="Language / ພາສາ">
+      <button type="button" data-lang="lo" aria-pressed="true" style="font-family:var(--font-lao)">ລາວ</button>
+      <button type="button" data-lang="en" aria-pressed="false" class="en">EN</button>
+    </div>
+  </div>
+</header>
+<main style="padding-top:8px">
+  <section class="view wrap" id="v-menu">
+    <div class="intro">
+      <h1 data-t="title"></h1>
+      <p data-t="subtitle"></p>
+      <p class="small" data-t="unit" style="margin-top:4px"></p>
+    </div>
+    <div class="layout" style="margin-top:6px">
+      <div id="gallery"></div>
+      <aside class="panel" id="cart-panel">
+        <h2 data-t="cart"></h2>
+        <div id="cart"></div>
+        <div class="sum big" style="border-top:1px dashed var(--line);margin-top:6px;padding-top:12px"><span data-t="total"></span><span class="num" id="cart-total"></span></div>
+        <div class="actions">
+          <button class="btn block" id="go-details" type="button" data-t="toDetails"></button>
+          <button class="btn ghost block small" id="new-order-1" type="button" data-t="newOrder"></button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="view wrap" id="v-details" hidden>
+    <div class="narrow">
+      <button class="link back" type="button" data-go="menu" data-t="backMenu"></button>
+      <form class="panel" id="details" novalidate>
+        <h2 data-t="fulfil"></h2>
+        <div class="grp"><span class="flabel"><span data-t="orderType"></span> <b class="req">*</b></span>
+          <div class="seg" id="c-type">
+            <label><input type="radio" name="type" value="pickup" id="t-pickup" checked><span data-t="pickup"></span></label>
+            <label><input type="radio" name="type" value="dine_in" id="t-dine"><span data-t="dine_in"></span></label>
+            <label id="delivery-opt"><input type="radio" name="type" value="delivery" id="t-delivery"><span data-t="delivery"></span></label>
+          </div></div>
+        <div id="who-wrap">
+        <h2 style="margin-top:8px" data-t="customer"></h2>
+        <label class="f"><span><span data-t="name"></span> <b class="req">*</b></span><input type="text" id="c-name" autocomplete="name" maxlength="80"></label>
+        <div class="f" style="margin-bottom:14px"><label class="flabel" for="c-phone"><span data-t="phone"></span> <b class="req">*</b></label>
+          <div class="phone">
+            <select id="c-cc" aria-label="Country code">
+              <option value="+856">LA +856</option><option value="+66">TH +66</option><option value="+84">VN +84</option><option value="+86">CN +86</option>
+              <option value="+855">KH +855</option><option value="+81">JP +81</option><option value="+82">KR +82</option><option value="+65">SG +65</option>
+              <option value="+1">US +1</option><option value="+44">UK +44</option><option value="+33">FR +33</option><option value="+61">AU +61</option><option value="+49">DE +49</option>
+              <option value="other" data-t="otherCode"></option>
+            </select>
+            <input type="tel" id="c-phone" inputmode="tel" autocomplete="tel-national" placeholder="20 5555 1234">
+          </div></div>
+        <label class="f" id="company-wrap"><span data-t="company"></span><input type="text" id="c-company" autocomplete="organization" maxlength="120"></label>
+
+        </div>
+        <label class="f" id="when-wrap"><span><span id="when-label"></span> <b class="req" id="when-req">*</b></span><input type="datetime-local" id="c-when"></label>
+        <label class="f" id="addr-wrap" hidden><span><span data-t="address"></span> <b class="req">*</b></span><textarea id="c-addr" maxlength="400"></textarea></label>
+        <div class="note warn" id="fee-note" hidden style="margin:-4px 0 14px" data-t="feeNote"></div>
+        <label class="f" id="staff-wrap" hidden><span><span data-t="staff"></span> <b class="req">*</b></span><select id="c-staff"></select></label>
+        <label class="f" id="table-wrap" hidden><span data-t="table"></span><input type="text" id="c-table" maxlength="20"></label>
+        <label class="f"><span data-t="notes"></span><textarea id="c-notes" maxlength="600"></textarea></label>
+        <button class="btn block" type="submit" data-t="preview"></button>
+      </form>
+    </div>
+  </section>
+
+  <section class="view wrap" id="v-preview" hidden>
+    <div class="narrow">
+      <button class="link back" type="button" data-go="details" data-t="backEdit"></button>
+      <div id="receipt"></div>
+      <section class="panel pay" id="pay">
+        <h2 data-t="payTitle"></h2>
+        <div class="amt num" id="pay-amt"></div>
+        <img src="/assets/img/payment-qr.webp" alt="Maison Matcha LAO QR payment code" width="827" height="1181">
+        <ol id="pay-steps"></ol>
+      </section>
+      <div class="actions">
+        <a class="btn green block" id="wa" href="#" target="_blank" rel="noopener" data-t="sendWa"></a>
+        <div class="note info" id="wa-note"></div>
+        <div class="row">
+          <button class="btn ghost" id="copy" type="button" data-t="copy"></button>
+          <button class="btn ghost" id="print" type="button" hidden data-t="print"></button>
+          <button class="btn ghost" type="button" data-go="details" data-t="edit"></button>
+        </div>
+        <textarea class="copybox" id="copy-text" readonly hidden></textarea>
+        <button class="btn ghost block" id="new-order-2" type="button" data-t="newOrder"></button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="bar" id="bar" hidden>
+  <div style="flex:1;min-width:0"><div class="tiny" id="bar-count" style="opacity:.75"></div><b class="num" id="bar-total"></b></div>
+  <button class="btn" id="bar-next" type="button" data-t="next"></button>
+</div>
+<div id="print-area"></div>
+<div class="toast-host" id="toasts" role="status" aria-live="polite"></div>
+
+<footer class="site-foot">
+  <div class="wrap foot-grid">
+    <div>
+      <img src="/assets/img/logo.webp" alt="Maison Matcha" width="360" height="308" class="foot-logo">
+      <div class="tag en">FROM KYOTO TO LUANG PRABANG</div>
+    </div>
+    <div>
+      <h2><span data-l="lo">ທີ່ຕັ້ງ</span><span data-l="en">Find us</span></h2>
+      <p>Ban Wat Sene Village, Sakkaline Rd<br><span data-l="lo">ຫຼວງພະບາງ</span><span data-l="en">Luang Prabang</span> 06000</p>
+      <a href="https://maps.app.goo.gl/Sb9Ym96esf5CzEWN8" target="_blank" rel="noopener"><span data-l="lo">ເປີດໃນ Google Maps</span><span data-l="en">Open in Google Maps</span></a>
+    </div>
+    <div>
+      <h2><span data-l="lo">ເວລາເປີດ</span><span data-l="en">Opening hours</span></h2>
+      <p><span data-l="lo">ທຸກວັນ</span><span data-l="en">Every day</span> <span class="num">09:00 – 17:00</span></p>
+    </div>
+    <div>
+      <h2><span data-l="lo">ຕິດຕໍ່</span><span data-l="en">Contact</span></h2>
+      <p>WhatsApp <a href="https://wa.me/8562051111711" target="_blank" rel="noopener" class="num">+856 20 5111 1711</a><br>
+      Instagram <a href="https://www.instagram.com/maisonmatchaluangprabang/" target="_blank" rel="noopener">@maisonmatchaluangprabang</a></p>
+    </div>
+  </div>
+  <div class="wrap foot-base tiny">© <span id="yr">2026</span> Maison Matcha · <span class="en">Luang Prabang</span></div>
+</footer>
+<script src="/assets/menu-data.js"></script>
+<script>
+
+const LOGO = '/assets/img/logo.webp';
+
+/* ───────── Words (Lao / English) ───────── */
+const T = {
+  lo: {
+    title: 'ສັ່ງເຄື່ອງດື່ມ Maison Matcha', subtitle: 'ເລືອກເມນູ, ກວດໃບສະຫຼຸບ ແລ້ວສົ່ງອໍເດີໃຫ້ຮ້ານທາງ WhatsApp', unit: 'ລາຄາທັງໝົດເປັນເງິນກີບ (LAK).',
+    cart: 'ກະຕ່າ', total: 'ລວມ', toDetails: 'ຕໍ່ໄປ: ຂໍ້ມູນລູກຄ້າ', newOrder: 'ເລີ່ມອໍເດີໃໝ່', next: 'ຕໍ່ໄປ →', add: '＋ ເພີ່ມໃສ່ກະຕ່າ', addShort: 'ເພີ່ມໃສ່ກະຕ່າ',
+    save: 'ບັນທຶກ', inCart: (n) => `ໃນກະຕ່າ ${n} ຈອກ`, emptyCart: 'ຍັງບໍ່ມີລາຍການ — ເລືອກເມນູຈາກຮູບ', cups: (n) => `${n} ຈອກ`, cupUnit: 'ຈອກ',
+    edit: 'ແກ້ໄຂ', remove: 'ລຶບ', style: 'ເລືອກແບບ', matcha: 'ເລືອກມັດຊະ', milk: 'ນົມ', oat: 'ປ່ຽນເປັນນົມໂອ໊ດ', oatShort: 'ນົມໂອ໊ດ',
+    oatPickFirst: 'ເລືອກແບບກ່ອນ', oatNoMilk: 'ແບບນີ້ບໍ່ມີນົມ', sweet: 'ລະດັບຄວາມຫວານ', sweetShort: (s) => `ຫວານ ${s}%`, qty: 'ຈຳນວນ (ຈອກ)',
+    itemNote: 'ຄຳແນະນຳພິເສດສຳລັບລາຍການນີ້', itemNotePh: 'ເຊັ່ນ ນ້ຳກ້ອນໜ້ອຍ', askPrice: 'ສອບຖາມລາຄາກັບຮ້ານ', noteLabel: 'ໝາຍເຫດ',
+    needStyle: 'ກະລຸນາເລືອກແບບເຄື່ອງດື່ມ', needSweet: 'ກະລຸນາເລືອກລະດັບຄວາມຫວານ', added: (n) => `ເພີ່ມ ${n} ແລ້ວ`,
+    backMenu: '← ກັບໄປເລືອກເມນູ', customer: 'ຂໍ້ມູນລູກຄ້າ', name: 'ຊື່', phone: 'ເບີໂທ / WhatsApp ພ້ອມລະຫັດປະເທດ', otherCode: 'ອື່ນໆ (ພິມ +…)',
+    company: 'ຊື່ຮ້ານກາເຟ ຫຼື ບໍລິສັດ (ຖ້າມີ)', fulfil: 'ການຮັບອໍເດີ', orderType: 'ປະເພດອໍເດີ', pickup: 'ມາຮັບເອງທີ່ຮ້ານ', dine_in: 'ນັ່ງກິນທີ່ຮ້ານ', delivery: 'ຈັດສົ່ງ',
+    whenPickup: 'ວັນ ແລະ ເວລາທີ່ຈະມາຮັບ (ເວລາລາວ)', whenDine: 'ວັນ ແລະ ເວລາ (ເວລາລາວ)', whenDelivery: 'ວັນ ແລະ ເວລາທີ່ຕ້ອງການໃຫ້ສົ່ງ (ເວລາລາວ)',
+    address: 'ທີ່ຢູ່ຈັດສົ່ງ', addressPh: 'ບ້ານ, ຖະໜົນ, ຈຸດສັງເກດ ຫຼື ລິ້ງແຜນທີ່', feeNote: 'ຄ່າຈັດສົ່ງ: ຮ້ານຈະແຈ້ງຢືນຢັນກັບທ່ານ (ຍັງບໍ່ລວມໃນຍອດ).',
+    table: 'ເລກໂຕະ (ຖ້າມີ)', staff: 'ພະນັກງານທີ່ຮັບອໍເດີ', staffPick: 'ເລືອກຊື່ພະນັກງານ', errStaff: 'ກະລຸນາເລືອກພະນັກງານທີ່ຮັບອໍເດີ', rStaff: 'ພະນັກງານ', notes: 'ໝາຍເຫດເພີ່ມເຕີມ', preview: 'ເບິ່ງໃບສະຫຼຸບອໍເດີ', emptyGo: 'ກະຕ່າຫວ່າງ — ກະລຸນາເລືອກເມນູກ່ອນ',
+    errName: 'ກະລຸນາໃສ່ຊື່', errPhone: 'ເບີບໍ່ຖືກຕ້ອງ — ເຊັ່ນ 20 5555 1234 (ລະຫັດປະເທດເລືອກດ້ານຊ້າຍ)', errType: 'ກະລຸນາເລືອກປະເພດອໍເດີ',
+    errWhen: 'ກະລຸນາເລືອກວັນ ແລະ ເວລາ', errPast: 'ເວລານີ້ຜ່ານມາແລ້ວ', errAddr: 'ກະລຸນາໃສ່ທີ່ຢູ່ຈັດສົ່ງ', errCheck: 'ກະລຸນາກວດຂໍ້ມູນທີ່ໝາຍສີແດງ',
+    backEdit: '← ກັບໄປແກ້ໄຂ', sendWa: 'ສົ່ງອໍເດີທາງ WhatsApp', copy: 'ສຳເນົາລາຍລະອຽດອໍເດີ', print: 'ພິມ / ບັນທຶກ PDF',
+    copied: 'ສຳເນົາລາຍລະອຽດອໍເດີແລ້ວ', copyManual: 'ກົດຄ້າງໃສ່ຂໍ້ຄວາມ ແລ້ວເລືອກ ສຳເນົາ', armed: 'ກົດອີກຄັ້ງເພື່ອລ້າງກະຕ່າ ແລະ ຂໍ້ມູນລູກຄ້າ', cleared: 'ເລີ່ມອໍເດີໃໝ່ແລ້ວ',
+    waTo: (n) => `WhatsApp ຈະເປີດຫາເບີຂອງຮ້ານ <b class="num">+${n}</b> ພ້ອມຂໍ້ຄວາມອໍເດີ. ກວດຂໍ້ຄວາມ ແລ້ວກົດ <b>ສົ່ງ</b> ໃນ WhatsApp.`,
+    waPick: 'WhatsApp ຈະເປີດພ້ອມຂໍ້ຄວາມອໍເດີ — ເລືອກແຊັດຂອງຮ້ານ Maison Matcha ແລ້ວກົດ <b>ສົ່ງ</b>.',
+    waNote: 'ການເປີດ WhatsApp ບໍ່ໄດ້ໝາຍຄວາມວ່າສົ່ງຂໍ້ຄວາມແລ້ວ ຫຼື ຮ້ານຮັບອໍເດີແລ້ວ. ອໍເດີຈະຖືກຢືນຢັນເມື່ອຮ້ານຕອບກັບ. ໃບສະຫຼຸບຈະສົ່ງເປັນຂໍ້ຄວາມ (ບໍ່ແນບຮູບ ຫຼື PDF). ຂໍ້ຄວາມຫາຮ້ານຂຽນເປັນພາສາລາວ.',
+    rKind: 'ໃບສະຫຼຸບອໍເດີ · ORDER SUMMARY', rTotal: 'ລວມ', rTotalNoFee: 'ລວມ (ຍັງບໍ່ລວມຄ່າຈັດສົ່ງ)', rCustomer: 'ລູກຄ້າ', rCompany: 'ຮ້ານ/ບໍລິສັດ', rType: 'ປະເພດ',
+    rWhenPickup: 'ເວລາມາຮັບ', rWhenDine: 'ເວລາ', rWhenDelivery: 'ເວລາຈັດສົ່ງ', rAddr: 'ທີ່ຢູ່ຈັດສົ່ງ', rTable: 'ໂຕະ', rFee: 'ຄ່າຈັດສົ່ງ', rFeeVal: 'ຮ້ານຈະແຈ້ງຢືນຢັນ',
+    rConfirm: 'ອໍເດີນີ້ຍັງບໍ່ໄດ້ຮັບການຢືນຢັນ. ຮ້ານຈະແຈ້ງຢືນຢັນການຮັບອໍເດີ ແລະ ເວລາທີ່ສາມາດໃຫ້ບໍລິການໄດ້.',
+    whenOptional: '(ບໍ່ບັງຄັບ)', asap: 'ໄວທີ່ສຸດ', payTitle: 'ຊຳລະເງິນຜ່ານ LAO QR', payAmt: (v) => `ຍອດທີ່ຕ້ອງໂອນ: ${v}`,
+    pay1: 'ສະແກນ QR ດ້ວຍແອັບທະນາຄານຂອງທ່ານ ແລ້ວໂອນຕາມຍອດລວມ. ຖ້າເປີດໜ້ານີ້ໃນໂທລະສັບ, ກົດຄ້າງທີ່ຮູບເພື່ອບັນທຶກ ຫຼື ແຄັບໜ້າຈໍ, ແລ້ວເລືອກສະແກນຈາກຮູບໃນແອັບທະນາຄານ.',
+    pay2: 'ກົດ "ສົ່ງອໍເດີທາງ WhatsApp" ດ້ານລຸ່ມ ແລ້ວກົດສົ່ງ.',
+    pay3: 'ສົ່ງຮູບສະລິບການໂອນເງິນ ໃນແຊັດ WhatsApp ດຽວກັນ. ຮ້ານຈະເລີ່ມກະກຽມເມື່ອກວດສອບການຊຳລະແລ້ວ.',
+    payDine: 'ນັ່ງກິນທີ່ຮ້ານ: ທ່ານສາມາດໂອນຜ່ານ QR ນີ້ ຫຼື ຊຳລະທີ່ເຄົາເຕີກໍໄດ້.',
+    payFee: 'ຄ່າຈັດສົ່ງຍັງບໍ່ລວມໃນຍອດນີ້. ຮ້ານຈະແຈ້ງຄ່າຈັດສົ່ງແຍກຕ່າງຫາກ.',
+  },
+  en: {
+    title: 'Order from Maison Matcha', subtitle: 'Choose your drinks, check the order summary, then send it to the shop on WhatsApp', unit: 'All prices are in Lao kip (LAK).',
+    cart: 'Your order', total: 'Total', toDetails: 'Next: your details', newOrder: 'Start new order', next: 'Next →', add: '＋ Add to cart', addShort: 'Add to cart',
+    save: 'Save', inCart: (n) => `${n} in cart`, emptyCart: 'Nothing here yet — choose a drink from the menu', cups: (n) => `${n} ${n === 1 ? 'cup' : 'cups'}`, cupUnit: 'cup',
+    edit: 'Edit', remove: 'Remove', style: 'Choose a style', matcha: 'Choose your matcha', milk: 'Milk', oat: 'Switch to oat milk', oatShort: 'Oat milk',
+    oatPickFirst: 'Choose a style first', oatNoMilk: 'This style has no milk', sweet: 'Sweetness', sweetShort: (s) => `Sweetness ${s}%`, qty: 'Quantity (cups)',
+    itemNote: 'Special instructions for this item', itemNotePh: 'e.g. less ice', askPrice: 'Ask the shop for the price', noteLabel: 'Note',
+    needStyle: 'Please choose a style', needSweet: 'Please choose a sweetness level', added: (n) => `${n} added`,
+    backMenu: '← Back to menu', customer: 'Your details', name: 'Name', phone: 'Phone / WhatsApp with country code', otherCode: 'Other (type +…)',
+    company: 'Café or company name (optional)', fulfil: 'How you’ll get it', orderType: 'Order type', pickup: 'Pick up at the shop', dine_in: 'Dine in', delivery: 'Delivery',
+    whenPickup: 'Pickup date and time (Laos time)', whenDine: 'Date and time (Laos time)', whenDelivery: 'Delivery date and time (Laos time)',
+    address: 'Delivery address', addressPh: 'Village, street, landmark or map link', feeNote: 'Delivery fee: the shop will confirm it with you (not included in the total).',
+    table: 'Table number (optional)', staff: 'Staff taking the order', staffPick: 'Choose staff name', errStaff: 'Please choose the staff member taking the order', rStaff: 'Staff', notes: 'Additional notes', preview: 'Preview order', emptyGo: 'Your cart is empty — choose a drink first',
+    errName: 'Please enter your name', errPhone: 'Please check the number — e.g. 20 5555 1234 (country code on the left)', errType: 'Please choose an order type',
+    errWhen: 'Please choose a date and time', errPast: 'That time has already passed', errAddr: 'Please enter the delivery address', errCheck: 'Please check the fields marked in red',
+    backEdit: '← Back to edit', sendWa: 'Send order on WhatsApp', copy: 'Copy order details', print: 'Print / Save as PDF',
+    copied: 'Order details copied', copyManual: 'Press and hold the text, then choose Copy', armed: 'Tap again to clear the cart and your details', cleared: 'New order started',
+    waTo: (n) => `WhatsApp will open to the shop’s number <b class="num">+${n}</b> with your order written in. Check it, then tap <b>Send</b> in WhatsApp.`,
+    waPick: 'WhatsApp will open with your order written in. Choose the Maison Matcha chat, then tap <b>Send</b>.',
+    waNote: 'Opening WhatsApp does not mean the message was sent or that the shop has accepted the order. Your order is confirmed when the shop replies. The summary is sent as text (no image or PDF). The message to the shop is written in Lao.',
+    rKind: 'ORDER SUMMARY · ໃບສະຫຼຸບອໍເດີ', rTotal: 'Total', rTotalNoFee: 'Total (delivery fee not included)', rCustomer: 'Customer', rCompany: 'Café / company', rType: 'Order type',
+    rWhenPickup: 'Pickup time', rWhenDine: 'Time', rWhenDelivery: 'Delivery time', rAddr: 'Delivery address', rTable: 'Table', rFee: 'Delivery fee', rFeeVal: 'To be confirmed by the shop',
+    rConfirm: 'This order is not confirmed yet. The shop will confirm acceptance and the time it can be ready.',
+    whenOptional: '(optional)', asap: 'As soon as possible', payTitle: 'Pay with LAO QR', payAmt: (v) => `Amount to transfer: ${v}`,
+    pay1: 'Scan the QR with your banking app and transfer the total. If you are on your phone, press and hold the image to save it (or take a screenshot), then choose scan from photo in your banking app.',
+    pay2: 'Tap "Send order on WhatsApp" below, then tap Send.',
+    pay3: 'Send a photo of your transfer slip in the same WhatsApp chat. We start preparing once the payment is checked.',
+    payDine: 'Dining in: you can pay with this QR or at the counter.',
+    payFee: 'The delivery fee is not included. The shop will tell you the fee separately.',
+  },
+};
+let LANG = 'lo';
+const t = (k, ...a) => { const v = T[LANG][k]; return typeof v === 'function' ? v(...a) : v; };
+const tl = (k, ...a) => { const v = T.lo[k]; return typeof v === 'function' ? v(...a) : v; }; // shop message is always Lao
+const nm = (o, lang = LANG) => (lang === 'en' ? o.en : o.lo);
+
+/* ───────── Helpers ───────── */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const n = (v) => Math.round(Number(v) || 0).toLocaleString('en-US');
+const kip = (v, lang = LANG) => (lang === 'en' ? `${n(v)} LAK` : `${n(v)} ກີບ`);
+function laoParts(d) {
+  const x = new Date(new Date(d).getTime() + 7 * 3600e3); const p = (v) => String(v).padStart(2, '0');
+  return { y: x.getUTCFullYear(), m: p(x.getUTCMonth() + 1), d: p(x.getUTCDate()), h: p(x.getUTCHours()), mi: p(x.getUTCMinutes()) };
+}
+const laoDT = (d) => { const x = laoParts(d); return `${x.d}/${x.m}/${x.y} ${x.h}:${x.mi}`; };
+const laoInput = (d) => { const x = laoParts(d); return `${x.y}-${x.m}-${x.d}T${x.h}:${x.mi}`; };
+const fromLaoInput = (v) => new Date(`${v}:00+07:00`);
+function toast(msg, k = '') {
+  const el = document.createElement('div'); el.className = `toast ${k}`; el.textContent = msg;
+  const h = $('#toasts'); h.append(el); while (h.children.length > 2) h.firstElementChild.remove();
+  setTimeout(() => el.remove(), k === 'e' ? 5000 : 2800);
+}
+
+/* Cart + order reference stay on this device until "Start new order"; customer details only for this tab. */
+const LS = 'mm-cart-v2'; const SS = 'mm-details-v1'; const LK = 'mm-lang';
+const store = {
+  get(k, s = localStorage) { try { return JSON.parse(s.getItem(k) || 'null'); } catch { return null; } },
+  set(k, v, s = localStorage) { try { s.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ } },
+  del(k, s = localStorage) { try { s.removeItem(k); } catch { /* */ } },
+};
+let state = { cart: [], ref: null, created: null };
+const save = () => store.set(LS, state);
+
+/* ───────── Pricing ───────── */
+function nuttyPrice(p) {
+  if (p.nutty) return p.nutty;
+  return NUTTY_SIGNATURE_PRICE && NUTTY_SIGNATURE_PRICE[p.id] ? NUTTY_SIGNATURE_PRICE[p.id] : null;
+}
+function basePrice(l) {
+  const p = BY_ID.get(l.pid); if (!p) return 0;
+  if (p.ways) { const w = p.ways.find((x) => x.key === l.way); return w ? w.price : 0; }
+  if (l.matcha === 'no3') return nuttyPrice(p) || p.price;
+  return p.price;
+}
+const unitPrice = (l) => basePrice(l) + (l.oat ? OAT_PRICE : 0);
+const lineTotal = (l) => unitPrice(l) * l.qty;
+const cartTotal = () => state.cart.reduce((s, l) => s + lineTotal(l), 0);
+function optText(l, lang = LANG) {
+  const p = BY_ID.get(l.pid); const out = [];
+  const w = p && p.ways ? p.ways.find((x) => x.key === l.way) : null;
+  if (w) out.push(nm(w, lang));
+  if (p && p.matcha && l.matcha && l.matcha !== 'house') { const m = MATCHAS.find((x) => x.key === l.matcha); out.push(`${m.code} ${nm(m, lang)}`); }
+  if (l.oat) out.push(`${T[lang].oatShort} +${n(OAT_PRICE)}`);
+  if (l.sweet !== null && l.sweet !== undefined) out.push(T[lang].sweetShort(l.sweet));
+  return out.join(' · ');
+}
+function priceLabel(p) {
+  if (!p.ways) return kip(p.price);
+  const ps = p.ways.map((w) => w.price);
+  return `${n(Math.min(...ps))}–${n(Math.max(...ps))} <span class="small muted">${LANG === 'en' ? 'LAK' : 'ກີບ'}</span>`;
+}
+
+/* ───────── Static text ───────── */
+function applyLang() {
+  document.documentElement.lang = LANG;
+  document.title = LANG === 'en' ? 'Maison Matcha · Order' : 'Maison Matcha · ສັ່ງອໍເດີ';
+  $$('[data-t]').forEach((el) => { el.textContent = t(el.dataset.t); });
+  $$('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === LANG)));
+  $('#c-addr').placeholder = t('addressPh');
+  const sel = $('#c-staff'); const cur = sel.value;
+  sel.innerHTML = `<option value="">${t('staffPick')}</option>${STAFF.map((x) => `<option value="${x}">${x}</option>`).join('')}`;
+  sel.value = cur;
+  $('#cart-panel').setAttribute('aria-label', t('cart'));
+  typeChanged();
+}
+
+/* ───────── Gallery ───────── */
+function renderGallery() {
+  const counts = new Map(); state.cart.forEach((l) => counts.set(l.pid, (counts.get(l.pid) || 0) + l.qty));
+  $('#gallery').innerHTML = `<nav class="cats" aria-label="${LANG === 'en' ? 'Menu categories' : 'ໝວດໝູ່ເມນູ'}">${CATEGORIES.map((c) => `<a href="#cat-${c.id}" data-cat="${c.id}">${nm(c)}</a>`).join('')}</nav>
+    ${CATEGORIES.map((c) => `<section id="cat-${c.id}" data-cat="${c.id}">
+      <div class="cat-head"><h2>${nm(c)}</h2><span class="en muted small">${LANG === 'en' ? c.lo : c.en}</span></div>
+      ${c.intro ? `<p class="small muted" style="margin:-4px 0 10px">${nm(c.intro)} · ${t('oatShort')} +${kip(OAT_PRICE)} · ${t('sweet')} ${SWEETNESS.join(' · ')}</p>` : ''}
+      <div class="gallery">${PRODUCTS.filter((p) => p.cat === c.id).map((p) => `
+        <article class="card">
+          <button class="ph" type="button" data-add="${p.id}" aria-label="${esc(nm(p))}"><img src="${p.img}" alt="${esc(p.en)}" loading="lazy" decoding="async"></button>
+          <div class="body">
+            ${p.code ? `<span class="code en">${p.code}</span>` : ''}
+            <span class="nm">${esc(nm(p))}</span><span class="sub ${LANG === 'en' ? '' : 'en'}">${esc(LANG === 'en' ? p.lo : p.en)}</span>
+            ${p.taste ? `<span class="sub">${esc(nm(p.taste))}</span>` : ''}
+            ${p.d ? `<span class="desc">${esc(nm(p.d))}</span>` : ''}
+            <span class="pr num">${priceLabel(p)}</span>
+            ${counts.get(p.id) ? `<span class="incart">${t('inCart', counts.get(p.id))}</span>` : ''}
+            <button class="btn small" type="button" data-add="${p.id}">${t('add')}</button>
+          </div>
+        </article>`).join('')}</div></section>`).join('')}`;
+  $$('[data-add]').forEach((b) => b.addEventListener('click', () => openItem(BY_ID.get(b.dataset.add))));
+  $$('.cats a').forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); document.getElementById(`cat-${a.dataset.cat}`).scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+}
+
+/* ───────── Item dialog ───────── */
+function openItem(p, editIndex = null) {
+  $$('dialog.item').forEach((d) => d.remove());
+  const st = editIndex !== null ? { ...state.cart[editIndex] }
+    : { pid: p.id, qty: 1, way: null, matcha: p.matcha ? 'house' : null, oat: false, sweet: null, note: '' };
+  const nutty = p.matcha ? nuttyPrice(p) : null;
+  const d = document.createElement('dialog'); d.className = 'item'; d.setAttribute('aria-labelledby', 'dlg-t');
+  d.innerHTML = `
+    <div class="dh"><img src="${p.img}" alt=""><div style="min-width:0"><h3 id="dlg-t">${esc(nm(p))}</h3><div class="en muted small">${esc(LANG === 'en' ? p.lo : p.en)}${p.code ? ` · ${p.code}` : ''}</div></div>
+      <button class="x" type="button" data-close aria-label="×">×</button></div>
+    <div class="db">
+      ${p.d ? `<p class="small muted" style="margin:0 0 14px">${esc(nm(p.d))}</p>` : ''}
+      ${p.ways ? `<div class="grp"><span class="flabel">${t('style')} <b class="req">*</b></span><div class="seg">${p.ways.map((w) => `<label><input type="radio" name="way" value="${w.key}" ${st.way === w.key ? 'checked' : ''}><span>${nm(w)} · <span class="num">${n(w.price)}</span></span></label>`).join('')}</div></div>` : ''}
+      ${p.matcha ? `<div class="grp"><span class="flabel">${t('matcha')}</span><div class="seg">${MATCHAS.map((m) => {
+        const off = m.key === 'no3' && !nutty;
+        const extra = m.key === 'no3' ? (nutty ? ` · <span class="num">${n(nutty)}</span>` : '') : '';
+        return `<label><input type="radio" name="matcha" value="${m.key}" ${st.matcha === m.key ? 'checked' : ''} ${off ? 'disabled' : ''}><span>${m.code ? `${m.code} · ` : ''}${nm(m)}${extra}</span></label>`;
+      }).join('')}</div>${!nutty ? `<div class="mopt" style="margin-top:6px">Maison No.3 · ${t('askPrice')}</div>` : ''}</div>` : ''}
+      ${p.oat ? `<div class="grp"><span class="flabel">${t('milk')}</span><label class="check"><input type="checkbox" id="dlg-oat" ${st.oat ? 'checked' : ''}><span>${t('oat')} <span class="muted">+${kip(OAT_PRICE)}</span></span></label><div class="tiny muted" id="oat-hint" style="margin-top:4px"></div></div>` : ''}
+      ${p.sweet ? `<div class="grp"><span class="flabel">${t('sweet')} <b class="req">*</b></span><div class="seg">${SWEETNESS.map((s) => `<label><input type="radio" name="sweet" value="${s}" ${st.sweet === s ? 'checked' : ''}><span>${s}%</span></label>`).join('')}</div></div>` : ''}
+      <div class="grp"><span class="flabel">${t('qty')}</span><div class="qty"><button type="button" data-q="-1" aria-label="−">−</button><span class="num" id="dlg-q">${st.qty}</span><button type="button" data-q="1" aria-label="+">＋</button></div></div>
+      <label class="f"><span>${t('itemNote')}</span><input type="text" id="dlg-note" maxlength="160" value="${esc(st.note || '')}" placeholder="${t('itemNotePh')}"></label>
+    </div>
+    <div class="df"><div><div class="tiny muted">${t('total')}</div><b class="num" id="dlg-total">—</b></div><span style="flex:1"></span>
+      <button class="btn" type="button" id="dlg-save">${editIndex !== null ? t('save') : t('addShort')}</button></div>`;
+  document.body.append(d);
+  const refresh = () => {
+    const w = p.ways ? p.ways.find((x) => x.key === st.way) : null;
+    const oat = $('#dlg-oat', d);
+    if (oat) {
+      const ok = !p.ways || (w && w.oat);
+      oat.disabled = !ok; if (!ok) { oat.checked = false; st.oat = false; }
+      $('#oat-hint', d).textContent = ok ? '' : (p.ways && !w ? t('oatPickFirst') : t('oatNoMilk'));
+    }
+    $('#dlg-q', d).textContent = st.qty;
+    $('#dlg-total', d).textContent = !p.ways || w ? kip(unitPrice(st) * st.qty) : '—';
+  };
+  d.addEventListener('change', (e) => {
+    if (e.target.name === 'way') st.way = e.target.value;
+    if (e.target.name === 'matcha') st.matcha = e.target.value;
+    if (e.target.name === 'sweet') st.sweet = Number(e.target.value);
+    if (e.target.id === 'dlg-oat') st.oat = e.target.checked;
+    refresh();
+  });
+  $$('[data-q]', d).forEach((b) => b.addEventListener('click', () => { st.qty = Math.min(200, Math.max(1, st.qty + Number(b.dataset.q))); refresh(); }));
+  $('[data-close]', d).addEventListener('click', () => d.close());
+  d.addEventListener('close', () => setTimeout(() => d.remove(), 0));
+  $('#dlg-save', d).addEventListener('click', () => {
+    if (p.ways && !st.way) return toast(t('needStyle'), 'e');
+    if (p.sweet && (st.sweet === null || st.sweet === undefined)) return toast(t('needSweet'), 'e');
+    st.note = $('#dlg-note', d).value.trim();
+    if (!p.sweet) st.sweet = null;
+    if (editIndex !== null) state.cart[editIndex] = st;
+    else {
+      const same = state.cart.find((l) => l.pid === st.pid && l.way === st.way && l.matcha === st.matcha && !!l.oat === !!st.oat && l.sweet === st.sweet && (l.note || '') === st.note);
+      if (same) same.qty = Math.min(200, same.qty + st.qty); else state.cart.push(st);
+      toast(t('added', nm(p)), 'o');
+    }
+    save(); d.close(); renderAll();
+  });
+  refresh();
+  d.showModal();
+}
+
+/* ───────── Cart ───────── */
+function renderCart() {
+  const el = $('#cart');
+  if (!state.cart.length) el.innerHTML = `<div class="empty">${t('emptyCart')}</div>`;
+  else el.innerHTML = state.cart.map((l, i) => {
+    const p = BY_ID.get(l.pid);
+    return `<div class="line" data-i="${i}">
+      <div style="min-width:0"><div class="t">${esc(nm(p))}</div>${optText(l) ? `<div class="o">${esc(optText(l))}</div>` : ''}${l.note ? `<div class="o">“${esc(l.note)}”</div>` : ''}
+        <div class="o num">${l.qty} × ${kip(unitPrice(l))}</div></div>
+      <div class="num" style="font-weight:500;text-align:right">${kip(lineTotal(l))}</div>
+      <div class="ctrl"><div class="qty"><button type="button" data-a="dec" aria-label="−">−</button><span class="num">${l.qty}</span><button type="button" data-a="inc" aria-label="+">＋</button></div>
+        <button class="link small" type="button" data-a="edit">${t('edit')}</button><span style="flex:1"></span><button class="link red small" type="button" data-a="del">${t('remove')}</button></div>
+    </div>`;
+  }).join('');
+  $$('.line', el).forEach((row) => row.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-a]'); if (!a) return;
+    const i = Number(row.dataset.i); const l = state.cart[i];
+    if (a.dataset.a === 'inc') l.qty = Math.min(200, l.qty + 1);
+    if (a.dataset.a === 'dec') { if (l.qty > 1) l.qty -= 1; else state.cart.splice(i, 1); }
+    if (a.dataset.a === 'del') state.cart.splice(i, 1);
+    if (a.dataset.a === 'edit') return openItem(BY_ID.get(l.pid), i);
+    save(); renderAll();
+  }));
+  const total = cartTotal(); const cups = state.cart.reduce((s, l) => s + l.qty, 0);
+  $('#cart-total').textContent = kip(total);
+  $('#go-details').disabled = !state.cart.length;
+  $('#bar-count').textContent = t('cups', cups);
+  $('#bar-total').textContent = kip(total);
+  $('#bar').hidden = !state.cart.length || $('#v-menu').hidden;
+}
+function renderAll() { renderGallery(); renderCart(); }
+
+/* ───────── Views ───────── */
+let VIEW = 'menu';
+function go(view) {
+  if (view !== 'menu' && !state.cart.length) { toast(t('emptyGo'), 'e'); view = 'menu'; }
+  VIEW = view;
+  ['menu', 'details', 'preview'].forEach((v) => { $(`#v-${v}`).hidden = v !== view; });
+  $('#bar').hidden = view !== 'menu' || !state.cart.length;
+  window.scrollTo(0, 0);
+}
+
+/* ───────── Details ───────── */
+const D = () => ({
+  name: $('#c-name').value.trim(), cc: $('#c-cc').value, phoneLocal: $('#c-phone').value.trim(), company: $('#c-company').value.trim(),
+  type: ($('input[name=type]:checked') || {}).value, when: $('#c-when').value, addr: $('#c-addr').value.trim(),
+  table: $('#c-table').value.trim(), notes: $('#c-notes').value.trim(), staff: $('#c-staff').value,
+});
+function phoneFull(d) {
+  const raw = d.phoneLocal.replace(/[\s\-().]/g, '');
+  if (raw.startsWith('+') || d.cc === 'other') return raw;
+  return d.cc + raw.replace(/^0+/, '');
+}
+const saveDetails = () => store.set(SS, D(), sessionStorage);
+function loadDetails() {
+  const d = store.get(SS, sessionStorage); if (!d) return;
+  $('#c-name').value = d.name || ''; $('#c-cc').value = d.cc || '+856'; $('#c-phone').value = d.phoneLocal || '';
+  $('#c-company').value = d.company || ''; $('#c-when').value = d.when || ''; $('#c-addr').value = d.addr || '';
+  $('#c-table').value = d.table || ''; $('#c-notes').value = d.notes || '';
+  if (d.staff && STAFF.includes(d.staff)) $('#c-staff').value = d.staff;
+  const r = $(`input[name=type][value="${d.type}"]`); if (r) r.checked = true;
+}
+function typeChanged() {
+  const ty = ($('input[name=type]:checked') || {}).value;
+  $('#addr-wrap').hidden = ty !== 'delivery'; $('#fee-note').hidden = ty !== 'delivery'; $('#table-wrap').hidden = ty !== 'dine_in'; $('#staff-wrap').hidden = ty !== 'dine_in';
+  $('#when-label').textContent = t(ty === 'delivery' ? 'whenDelivery' : ty === 'dine_in' ? 'whenDine' : 'whenPickup') + (ty === 'pickup' ? ` ${t('whenOptional')}` : '');
+  $('#who-wrap').hidden = ty === 'dine_in'; $('#company-wrap').hidden = ty !== 'delivery';
+  $('#when-wrap').hidden = ty === 'dine_in'; $('#when-req').hidden = ty !== 'delivery';
+}
+function fieldErr(input, msg) {
+  input.classList.add('bad');
+  const e = document.createElement('div'); e.className = 'err'; e.textContent = msg; (input.closest('label.f, .f, .grp') || input.parentElement).append(e);
+}
+function validate() {
+  $$('#details .err').forEach((e) => e.remove()); $$('#details .bad').forEach((e) => e.classList.remove('bad'));
+  const d = D(); let ok = true;
+  if (d.type === 'dine_in') { d.name = ''; d.phoneLocal = ''; d.company = ''; d.when = ''; }
+  if (d.type === 'pickup') d.company = '';
+  if (d.type !== 'dine_in' && !d.name) { fieldErr($('#c-name'), t('errName')); ok = false; }
+  if (d.type !== 'dine_in' && !/^\+[1-9]\d{7,14}$/.test(phoneFull(d))) { fieldErr($('#c-phone'), t('errPhone')); ok = false; }
+  if (!d.type) { fieldErr($('#c-type'), t('errType')); ok = false; }
+  if (d.type === 'delivery' && !d.when) { fieldErr($('#c-when'), t('errWhen')); ok = false; }
+  else if (d.when && (fromLaoInput(d.when).getTime() < Date.now() - 10 * 60e3)) { fieldErr($('#c-when'), t('errPast')); ok = false; }
+  if (d.type === 'delivery' && !d.addr) { fieldErr($('#c-addr'), t('errAddr')); ok = false; }
+  if (d.type === 'dine_in' && !STAFF.includes(d.staff)) { fieldErr($('#c-staff'), t('errStaff')); ok = false; }
+  if (!ok) { toast(t('errCheck'), 'e'); const f = $('#details .bad'); if (f) f.scrollIntoView({ block: 'center' }); }
+  return ok ? d : null;
+}
+
+/* ───────── Order reference ───────── */
+function ensureRef() {
+  if (state.ref) return;
+  const x = laoParts(new Date());
+  const abc = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  const rnd = [...crypto.getRandomValues(new Uint8Array(4))].map((b) => abc[b % abc.length]).join('');
+  state.ref = `MM-${String(x.y).slice(2)}${x.m}${x.d}-${rnd}`;
+  state.created = new Date().toISOString();
+  save();
+}
+
+/* ───────── Receipt (viewer's language) + WhatsApp text (always Lao for the shop) ───────── */
+const whenKey = (ty) => (ty === 'delivery' ? 'rWhenDelivery' : ty === 'dine_in' ? 'rWhenDine' : 'rWhenPickup');
+function receiptHtml(d) {
+  const total = cartTotal();
+  return `<div class="receipt" lang="${LANG}">
+    <img class="lg" src="${LOGO}" alt="Maison Matcha">
+    <div class="shop en">Maison Matcha</div><div class="shop2 en">MAISON MATCHA</div>
+    <div class="kind">${t('rKind')}</div>
+    <hr>
+    <div class="tot num">₭${n(total)}</div>
+    <div class="totl">${d.type === 'delivery' ? t('rTotalNoFee') : t('rTotal')}</div>
+    <hr>
+    <div class="meta">
+      ${d.name ? `<div>${t('rCustomer')}: ${esc(d.name)}</div>` : ''}
+      ${d.phoneLocal ? `<div>WhatsApp: <span class="num">${esc(phoneFull(d))}</span></div>` : ''}
+      ${d.company ? `<div>${t('rCompany')}: ${esc(d.company)}</div>` : ''}
+      <div>${t('rType')}: ${t(d.type)}</div>
+      ${d.type !== 'dine_in' ? `<div>${t(whenKey(d.type))}: <span class="num">${d.when ? laoDT(fromLaoInput(d.when)) : t('asap')}</span></div>` : ''}
+      ${d.type === 'delivery' ? `<div>${t('rAddr')}: ${esc(d.addr)}</div>` : ''}
+      ${d.type === 'dine_in' && d.table ? `<div>${t('rTable')}: ${esc(d.table)}</div>` : ''}
+      ${d.type === 'dine_in' && d.staff ? `<div>${t('rStaff')}: ${esc(d.staff)}</div>` : ''}
+    </div>
+    <hr>
+    ${state.cart.map((l) => { const p = BY_ID.get(l.pid); return `<div class="it"><span class="n">${esc(nm(p))}</span><span class="num">₭${n(lineTotal(l))}</span>
+      <span class="d num">${t('cups', l.qty)} × ₭${n(unitPrice(l))}</span>${optText(l) ? `<span class="d">${esc(optText(l))}</span>` : ''}${l.note ? `<span class="d">${t('noteLabel')}: ${esc(l.note)}</span>` : ''}</div>`; }).join('')}
+    <hr>
+    <div class="s b"><span>${t('rTotal')}</span><span class="num">₭${n(total)}</span></div>
+    ${d.type === 'delivery' ? `<div class="s"><span>${t('rFee')}</span><span>${t('rFeeVal')}</span></div>` : ''}
+    ${d.notes ? `<hr><div class="meta small">${t('noteLabel')}: ${esc(d.notes)}</div>` : ''}
+    <hr>
+    <div class="confirm">${t('rConfirm')}</div>
+    <hr>
+    <div class="foot en">Nice to Matcha</div>
+    <div class="bottom num"><span>${laoDT(state.created)}</span><span>№ ${esc(state.ref)}</span></div>
+  </div>`;
+}
+function messageText(d) {
+  const L = [];
+  L.push('ອໍເດີໃໝ່ · Maison Matcha');
+  L.push(`ເລກອ້າງອີງ: ${state.ref}`);
+  L.push(`ວັນທີສັ່ງ: ${laoDT(state.created)} (ເວລາລາວ)`);
+  L.push('');
+  if (d.name) L.push(`ລູກຄ້າ: ${d.name}`);
+  if (d.phoneLocal) L.push(`WhatsApp: ${phoneFull(d)}`);
+  if (d.company) L.push(`ຮ້ານ/ບໍລິສັດ: ${d.company}`);
+  L.push(`ປະເພດ: ${tl(d.type)}`);
+  if (d.type !== 'dine_in') L.push(`${tl(whenKey(d.type))}: ${d.when ? laoDT(fromLaoInput(d.when)) : tl('asap')}`);
+  if (d.type === 'delivery') L.push(`ທີ່ຢູ່ຈັດສົ່ງ: ${d.addr}`);
+  if (d.type === 'dine_in' && d.table) L.push(`ໂຕະ: ${d.table}`);
+  if (d.type === 'dine_in' && d.staff) L.push(`ພະນັກງານ: ${d.staff}`);
+  L.push('');
+  L.push('ລາຍການ:');
+  state.cart.forEach((l, i) => {
+    const p = BY_ID.get(l.pid);
+    L.push(`${i + 1}. ${p.lo} (${p.en})`);
+    const o = optText(l, 'lo'); if (o) L.push(`   ${o}`);
+    L.push(`   ${l.qty} ຈອກ × ${kip(unitPrice(l), 'lo')} = ${kip(lineTotal(l), 'lo')}`);
+    if (l.note) L.push(`   ໝາຍເຫດ: ${l.note}`);
+  });
+  L.push('');
+  L.push(`ລວມທັງໝົດ: ${kip(cartTotal(), 'lo')}`);
+  if (d.type === 'delivery') L.push('ຄ່າຈັດສົ່ງ: ກະລຸນາແຈ້ງຢືນຢັນ (ຍັງບໍ່ລວມໃນຍອດ)');
+  if (d.notes) L.push(`ໝາຍເຫດ: ${d.notes}`);
+  L.push(d.type === 'dine_in' ? 'ການຊຳລະ: ໂອນຜ່ານ LAO QR ຫຼື ຊຳລະທີ່ເຄົາເຕີ' : 'ການຊຳລະ: ໂອນຜ່ານ LAO QR, ຈະສົ່ງສະລິບຕາມມາໃນແຊັດນີ້');
+  if (LANG === 'en') L.push('(ລູກຄ້າໃຊ້ພາສາອັງກິດ · Customer prefers English)');
+  L.push('');
+  L.push('ກະລຸນາຢືນຢັນການຮັບອໍເດີ ແລະ ເວລາ. ຂອບໃຈ');
+  return L.join('\n');
+}
+function showPreview() {
+  const d = validate(); if (!d) return;
+  saveDetails(); ensureRef();
+  const html = receiptHtml(d);
+  $('#receipt').innerHTML = html; $('#print-area').innerHTML = html;
+  const text = messageText(d);
+  $('#copy-text').value = text; $('#copy-text').hidden = true;
+  $('#pay-amt').textContent = t('payAmt', kip(cartTotal()));
+  $('#pay-steps').innerHTML = [t('pay1'), t('pay2'), t('pay3')].map((x) => `<li>${esc(x)}</li>`).join('')
+    + (d.type === 'dine_in' ? `<li style="list-style:none;margin-left:-1.3em" class="muted">${esc(t('payDine'))}</li>` : '')
+    + (d.type === 'delivery' ? `<li style="list-style:none;margin-left:-1.3em" class="muted">${esc(t('payFee'))}</li>` : '');
+  $('#wa').href = `${SHOP_WHATSAPP ? `https://wa.me/${SHOP_WHATSAPP}` : 'https://wa.me/'}?text=${encodeURIComponent(text)}`;
+  $('#wa-note').innerHTML = `${SHOP_WHATSAPP ? t('waTo', SHOP_WHATSAPP) : t('waPick')}<br><span class="small">${t('waNote')}</span>`;
+  go('preview');
+}
+
+/* ───────── Start new order (two taps) ───────── */
+function armNewOrder(btn) {
+  let armed = false; let timer;
+  btn.addEventListener('click', () => {
+    if (!state.cart.length && !state.ref) { resetAll(); return; }
+    if (!armed) { armed = true; btn.textContent = t('armed'); timer = setTimeout(() => { armed = false; btn.textContent = t('newOrder'); }, 4000); return; }
+    clearTimeout(timer); armed = false; resetAll(); btn.textContent = t('newOrder');
+  });
+}
+function resetAll() {
+  state = { cart: [], ref: null, created: null };
+  store.del(LS); store.del(SS, sessionStorage);
+  $('#details').reset(); $('#c-cc').value = '+856'; typeChanged();
+  $('#c-when').value = laoInput(new Date(Date.now() + 30 * 60e3));
+  $('#receipt').innerHTML = ''; $('#print-area').innerHTML = '';
+  renderAll(); go('menu'); toast(t('cleared'), 'o');
+}
+
+/* ───────── Boot ───────── */
+(function init() {
+  const saved = store.get(LS);
+  if (saved && Array.isArray(saved.cart)) state = { cart: saved.cart.filter((l) => BY_ID.has(l.pid)), ref: saved.ref || null, created: saved.created || null };
+  const savedLang = store.get(LK); if (savedLang === 'en' || savedLang === 'lo') LANG = savedLang;
+  if (!DELIVERY_ENABLED) $('#delivery-opt').remove();
+  $('#c-when').min = laoInput(new Date(Date.now() - 10 * 60e3));
+  $('#c-when').value = laoInput(new Date(Date.now() + 30 * 60e3));
+  applyLang(); loadDetails(); typeChanged();
+  const framed = (() => { try { return window.self !== window.top; } catch { return true; } })();
+  $('#print').hidden = framed; // the print dialog only works on your own website
+  $('#print').addEventListener('click', () => window.print());
+  renderAll(); go('menu');
+
+  $$('[data-lang]').forEach((b) => b.addEventListener('click', () => {
+    LANG = b.dataset.lang; store.set(LK, LANG); applyLang(); renderAll();
+    if (VIEW === 'preview') showPreview();
+  }));
+  $('#go-details').addEventListener('click', () => go('details'));
+  $('#bar-next').addEventListener('click', () => go('details'));
+  $$('[data-go]').forEach((b) => b.addEventListener('click', () => go(b.dataset.go)));
+  $('#c-type').addEventListener('change', () => { typeChanged(); saveDetails(); });
+  $('#details').addEventListener('input', saveDetails);
+  $('#details').addEventListener('submit', (e) => { e.preventDefault(); showPreview(); });
+  $('#copy').addEventListener('click', () => {
+    const text = $('#copy-text').value;
+    const fallback = () => { const ta = $('#copy-text'); ta.hidden = false; ta.focus(); ta.select(); toast(t('copyManual')); };
+    try { navigator.clipboard.writeText(text).then(() => toast(t('copied'), 'o'), fallback); } catch { fallback(); }
+  });
+  armNewOrder($('#new-order-1')); armNewOrder($('#new-order-2'));
+})();
+</script>
+</body>
+</html>

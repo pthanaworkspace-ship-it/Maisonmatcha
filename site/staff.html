@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="lo">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Maison Matcha · ເຂົ້າສູ່ລະບົບພະນັກງານ</title>
+<meta name="theme-color" content="#243229">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700&family=Solway:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/staff.css">
+</head>
+<body>
+<main class="wrap narrow" style="max-width:420px;padding:48px 16px">
+  <div style="text-align:center"><img src="/logo.webp" alt="Maison Matcha" style="height:64px;width:auto"><div class="tiny muted" style="letter-spacing:.2em;margin-top:8px">MATCHA CLUB · STAFF</div></div>
+  <form id="f" class="panel" style="margin-top:20px">
+    <h1 id="title" style="font-size:1.3rem;margin-bottom:12px">ເຂົ້າສູ່ລະບົບພະນັກງານ</h1>
+    <div id="setupBox" class="hidden"><p class="small muted">ຍັງບໍ່ມີຜູ້ດູແລ — ສ້າງບັນຊີຜູ້ດູແລທຳອິດ (ເຮັດໄດ້ຄັ້ງດຽວ).</p>
+      <label class="field"><span>ຊື່ທີ່ສະແດງ</span><input type="text" id="dn" autocomplete="name"></label></div>
+    <label class="field"><span>ຊື່ຜູ້ໃຊ້</span><input type="text" id="u" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+    <label class="field"><span>ລະຫັດຜ່ານ</span><input type="password" id="p" autocomplete="current-password" required></label>
+    <label class="field hidden" id="p2box"><span>ພິມລະຫັດຜ່ານອີກຄັ້ງ</span><input type="password" id="p2" autocomplete="new-password"></label>
+    
+    <button class="btn block" type="submit" id="b" style="margin-top:12px">ເຂົ້າສູ່ລະບົບ</button>
+    <p id="msg" class="small" role="alert"></p>
+  </form>
+</main>
+<script type="module" src="/staff-login.js"></script>
+</body>
+</html>
