@@ -49,9 +49,10 @@ export async function qrInto(el, text) {
 export async function initStaff() {
   if (!getToken()) { location.href = `/staff?next=${encodeURIComponent(location.pathname)}`; return new Promise(() => {}); }
   const { user } = await api('/auth/me');
+  const here = (p) => (location.pathname.replace(/\/$/, '') === p ? ' aria-current="page"' : '');
   const bar = document.createElement('header'); bar.className = 'topbar';
   bar.innerHTML = `<div class="wrap"><a href="/staff/club" aria-label="Matcha Club"><img class="logo" src="/logo.webp" alt="Maison Matcha"></a>
-    <nav class="nav" aria-label="ເມນູພະນັກງານ"><a href="/staff/club" aria-current="page">Matcha Club</a><a href="/" target="_blank" rel="noopener">ເວັບໄຊ</a></nav>
+    <nav class="nav" aria-label="ເມນູພະນັກງານ"><a href="/staff/club"${here('/staff/club')}>Matcha Club</a>${user.role === 'admin' ? `<a href="/staff/sales"${here('/staff/sales')}>ຍອດຂາຍ</a>` : ''}<a href="/" target="_blank" rel="noopener">ເວັບໄຊ</a></nav>
     <span class="spacer"></span><span class="who">${esc(user.display_name)}${user.role === 'admin' ? ' · ຜູ້ດູແລ' : ''}</span>
     <button class="btn ghost small" id="pwBtn" type="button">ລະຫັດຜ່ານ</button><button class="btn ghost small" id="logout" type="button">ອອກຈາກລະບົບ</button></div>`;
   document.body.prepend(bar);

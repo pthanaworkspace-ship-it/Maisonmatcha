@@ -11,6 +11,10 @@
       "destination": "/staff-club"
     },
     {
+      "source": "/staff/sales",
+      "destination": "/staff-sales"
+    },
+    {
       "source": "/staff/login",
       "destination": "/staff"
     },

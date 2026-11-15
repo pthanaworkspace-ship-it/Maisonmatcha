@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="lo">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Maison Matcha · ຍອດຂາຍ</title>
+<meta name="theme-color" content="#243229">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700&family=Solway:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/staff.css">
+<style>
+.sales-head{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.sales-head > div:first-child{flex:1;min-width:220px}
+.range{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.range input[type=date]{width:auto;min-height:40px}
+.bars{display:flex;align-items:flex-end;gap:3px;height:140px;padding-top:8px}
+.bars i{flex:1;min-width:3px;background:var(--green);border-radius:4px 4px 0 0;position:relative}
+.bars i.wk{background:var(--green-deep, #2f5b22)}
+.bars-x{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-top:4px}
+.share{height:6px;background:var(--line-soft);border-radius:4px;overflow:hidden;min-width:60px}
+.share i{display:block;height:100%;background:var(--gold, #a8854f)}
+.pw{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.pw .panel{margin:0}
+.pw h3{font-size:1rem;margin:0 0 2px}
+.pw dl{display:grid;grid-template-columns:1fr auto;gap:4px 10px;margin:10px 0 0;font-size:.9rem}
+.pw dt{color:var(--muted)} .pw dd{margin:0;text-align:right}
+.pw .order{font-size:1.5rem;font-weight:500;margin-top:8px}
+td.ok{color:var(--green-deep)} td.bad{color:var(--red)} td.warn{color:#7a5f2c}
+.table-wrap{overflow-x:auto}
+table.simple td,table.simple th{white-space:nowrap}
+@media print{.topbar,.range,.seg,#syncB{display:none}}
+</style>
+</head>
+<body>
+<main class="wrap" style="padding-bottom:60px">
+  <div class="hero sales-head">
+    <div><h1>ຍອດຂາຍ · Loyverse</h1><p id="syncInfo">ກຳລັງໂຫຼດ…</p></div>
+    <button class="btn ghost" type="button" id="syncB">⟳ ດຶງຂໍ້ມູນລ່າສຸດ</button>
+    <button class="btn ghost" type="button" id="xlsB">⬇ Excel</button>
+  </div>
+  <div class="range" id="range">
+    <div class="seg" role="radiogroup" aria-label="ຊ່ວງເວລາ">
+      <label><input type="radio" name="rg" value="today"><span>ມື້ນີ້</span></label>
+      <label><input type="radio" name="rg" value="7"><span>7 ມື້</span></label>
+      <label><input type="radio" name="rg" value="month" checked><span>ເດືອນນີ້</span></label>
+      <label><input type="radio" name="rg" value="last"><span>ເດືອນກ່ອນ</span></label>
+      <label><input type="radio" name="rg" value="30"><span>30 ມື້</span></label>
+    </div>
+    <input type="date" id="from" aria-label="ຈາກວັນທີ"> <span class="muted">–</span> <input type="date" id="to" aria-label="ເຖິງວັນທີ">
+  </div>
+  <div class="seg club-tabs" id="tabs" role="tablist" style="margin-top:14px">
+    <label><input type="radio" name="tab" value="ov" checked><span>ພາບລວມ</span></label>
+    <label><input type="radio" name="tab" value="items"><span>ລາຍການສິນຄ້າ</span></label>
+    <label><input type="radio" name="tab" value="matcha"><span>ຜົງມັດຊະ ແລະ ສັ່ງຊື້</span></label>
+    <label><input type="radio" name="tab" value="cash"><span>ກວດເງິນ</span></label>
+  </div>
+  <div id="body" aria-live="polite" style="margin-top:14px"></div>
+</main>
+<script type="module" src="/staff-sales.js"></script>
+</body>
+</html>
