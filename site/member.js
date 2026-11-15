@@ -17,35 +17,44 @@ const BTN_OPEN = 'ເບິ່ງບັດສະມາຊິກ <span class="en"
 const BTN_CLOSE = 'ເກັບບັດ <span class="en">Put card away</span>';
 
 // ───────── content
+const STATUS = { // English line on the card · Lao line · show which date
+  active: ['Valid until', 'ໃຊ້ໄດ້ເຖິງ', 'exp'], scheduled: ['Starts on', 'ເລີ່ມໃຊ້ໄດ້', 'act'], pending: ['Awaiting payment', 'ລໍຖ້າຢືນຢັນການຊຳລະ', ''],
+  used: ['All drinks used', 'ແລກຄົບແລ້ວ', ''], expired: ['Expired', 'ໝົດອາຍຸແລ້ວ', 'exp'], refunded: ['Closed', 'ປິດແລ້ວ', ''], cancelled: ['Closed', 'ປິດແລ້ວ', ''],
+};
+const qrBox = () => '<div class="kc-qrw"><div class="kc-qr" id="kcQr" role="img" aria-label="Member QR code"></div></div>';
+const qrCap = '<div class="kc-qr-cap">ສະແດງ QR ນີ້ທີ່ເຄົາເຕີເພື່ອແລກເຄື່ອງດື່ມ<br><span class="en">Show this QR at the counter to redeem.</span></div>';
+const closeBtn = '<button class="kc-close" type="button">ເກັບບັດ · <span class="en">Put card away</span></button>';
 function detailsHtml(d) {
   const m = d.membership;
-  const head = `<div class="kc-rule"></div><div class="kc-name${String(d.first_name || '').length > 14 ? ' long' : ''}">${esc(d.first_name || '—')}</div><div class="kc-id">${esc(d.member_no || '')}</div>`;
-  if (!m) return `${head}<div class="kc-note">ຍັງບໍ່ມີແພັກເກດທີ່ໃຊ້ງານ — ສອບຖາມໄດ້ທີ່ເຄົາເຕີ.<br><span class="en">No membership yet — ask at the counter.</span></div>${qrHtml()}`;
-  const st = ST[m.status] || ['—', '—', 'off'];
-  const total = Math.max(0, Number(m.total) || 0); const used = Math.min(total, Math.max(0, Number(m.used) || 0));
+  const head = `<div class="kc-rule"></div><div class="kc-name${String(d.first_name || '').length > 12 ? ' long' : ''}">${esc(d.first_name || '—')}</div><div class="kc-id">${esc(d.member_no || '')}</div><div class="kc-rule"></div>`;
+  if (!m) return `${head}<div class="kc-foot"><div><div class="kc-st">No membership yet</div><div class="kc-st-lo">ຍັງບໍ່ມີແພັກເກດ — ສອບຖາມໄດ້ທີ່ເຄົາເຕີ</div></div><span class="kc-dia"></span>${qrBox()}</div>${qrCap}${closeBtn}`;
+  const total = Math.max(0, Number(m.total) || 0); const used = Math.min(total, Math.max(0, Number(m.used) || 0)); const left = Math.max(0, Number(m.rem) || 0);
   const shown = Math.min(total, 40); const cols = shown <= 10 ? Math.max(shown, 1) : Math.ceil(shown / Math.ceil(shown / 10));
   const dots = Array.from({ length: shown }, (_, i) => `<li class="kc-dot${i < used ? ' used' : ''}"></li>`).join('');
+  const st = STATUS[m.status] || ['—', '—', ''];
+  const date = st[2] === 'exp' ? m.expires_on : st[2] === 'act' ? m.activated_on : null;
   const note = {
-    expired: 'ບັດນີ້ໝົດອາຍຸແລ້ວ — ຕໍ່ອາຍຸໄດ້ທີ່ເຄົາເຕີ.<br><span class="en">This membership has expired — renew at the counter.</span>',
-    pending: 'ລໍຖ້າຮ້ານຢືນຢັນການຊຳລະ — ແລກໄດ້ເມື່ອຢືນຢັນແລ້ວ.<br><span class="en">Waiting for the café to confirm payment.</span>',
-    scheduled: `ເລີ່ມໃຊ້ໄດ້ວັນທີ ${dLo(m.activated_on)}.<br><span class="en">Starts on ${dLo(m.activated_on)}.</span>`,
-    used: 'ແລກຄົບທຸກຈອກແລ້ວ — ຕໍ່ອາຍຸໄດ້ທີ່ເຄົາເຕີ.<br><span class="en">All drinks used — renew at the counter.</span>',
-    refunded: 'ບັດນີ້ປິດແລ້ວ.<br><span class="en">This membership is closed.</span>', cancelled: 'ບັດນີ້ປິດແລ້ວ.<br><span class="en">This membership is closed.</span>',
+    expired: 'ຕໍ່ອາຍຸໄດ້ທີ່ເຄົາເຕີ · <span class="en">Renew at the counter.</span>',
+    pending: 'ແລກໄດ້ເມື່ອຮ້ານຢືນຢັນການຊຳລະແລ້ວ · <span class="en">Drinks can be redeemed once the café confirms payment.</span>',
+    used: 'ຕໍ່ອາຍຸໄດ້ທີ່ເຄົາເຕີ · <span class="en">Renew at the counter.</span>',
   }[m.status];
   return `${head}
-    <div class="kc-plan"><span class="kc-plan-name">${esc(m.pkg_name || '')}</span><span class="kc-pill ${st[2]}">${esc(st[0])} · <span class="en">${esc(st[1])}</span></span></div>
-    <ul class="kc-dots" style="--cols:${cols}" role="img" aria-label="${used} of ${total} drinks redeemed, ${total - used} remaining">${dots}</ul>
-    <div class="kc-legend" aria-hidden="true"><span><i class="f"></i>ແລກແລ້ວ · Redeemed</span><span><i></i>ເຫຼືອ · Remaining</span></div>
+    <div class="kc-plan">${esc(m.pkg_name || '')}</div>
+    <ul class="kc-dots" style="--cols:${cols}" role="img" aria-label="${used} of ${total} drinks redeemed, ${left} remaining">${dots}</ul>
+    <div class="kc-legend" aria-hidden="true"><span><i></i>ເຫຼືອ · Left</span><span><i class="u"></i>ແລກແລ້ວ · Used</span></div>
+    <div class="kc-rule"></div>
     <div class="kc-stats">
-      <div><b>${total}</b><span>ທັງໝົດ</span><small>Total</small></div>
-      <div><b>${used}</b><span>ແລກແລ້ວ</span><small>Redeemed</small></div>
-      <div><b>${Math.max(0, Number(m.rem) || 0)}</b><span>ເຫຼືອ</span><small>Remaining</small></div>
+      <div><b>${total}</b><small>Total</small><span>ທັງໝົດ</span></div>
+      <div><b>${used}</b><small>Used</small><span>ແລກແລ້ວ</span></div>
+      <div><b>${left}</b><small>Left</small><span>ເຫຼືອ</span></div>
     </div>
-    <div class="kc-dates"><div>ເລີ່ມ <small>· Activated</small><b>${dLo(m.activated_on)}</b></div><div>ໃຊ້ໄດ້ເຖິງ <small>· Valid until</small><b>${dLo(m.expires_on)}</b></div></div>
-    ${note ? `<div class="kc-note">${note}</div>` : ''}
-    ${qrHtml()}`;
+    <div class="kc-rule"></div>
+    <div class="kc-foot">
+      <div><div class="kc-st">${esc(st[0])}</div>${date ? `<div class="kc-st-d">${dLo(date)}</div>` : ''}<div class="kc-st-lo">${esc(st[1])}</div></div>
+      <span class="kc-dia" aria-hidden="true"></span>${qrBox()}
+    </div>
+    ${note ? `<div class="kc-note">${note}</div>` : ''}${qrCap}${closeBtn}`;
 }
-const qrHtml = () => '<div class="kc-qr" id="kcQr" role="img" aria-label="Member QR code"></div><div class="kc-qr-cap">ສະແດງ QR ນີ້ທີ່ເຄົາເຕີເພື່ອແລກເຄື່ອງດື່ມ<br><span class="en">Show this QR at the counter to redeem.</span></div>';
 
 function extraHtml(d) {
   const h = d.history || [];
@@ -57,18 +66,19 @@ function build(d) {
   if (!card) {
     card = document.createElement('article');
     card.className = 'kc-card'; card.id = 'kcCard'; card.tabIndex = -1;
-    card.innerHTML = `<div class="kc-peek"><img class="kc-logo" src="/logo.webp" alt="Maison Matcha"><div class="kc-peek-r"><b>MEMBER CARD</b><span>ບັດສະມາຊິກ</span></div></div>
-      <button class="kc-close" type="button" aria-label="ເກັບບັດ · Put card away">×</button><div class="kc-body" id="kcDetails"></div>`;
+    card.innerHTML = `<div class="kc-peek" aria-hidden="true"><img src="/logo.webp" alt=""><div class="kc-peek-t">MEMBER CARD</div></div>
+      <div class="kc-face"><header class="kc-fh"><img src="/logo.webp" alt="Maison Matcha"><span class="kc-dia" aria-hidden="true"></span><div class="kc-fh-r"><b>MATCHA CLUB</b><span>ສະມາຊິກມັດຊະ</span></div></header>
+      <div id="kcDetails"></div></div>`;
     pocket.insertBefore(card, holder);
     details = $('#kcDetails', card);
     card.addEventListener('click', (e) => { if (!open && !e.target.closest('button')) toggle(true); });
-    $('.kc-close', card).addEventListener('click', () => toggle(false));
+    card.addEventListener('click', (e) => { if (e.target.closest('.kc-close')) toggle(false); });
     if ('ResizeObserver' in window) new ResizeObserver(measure).observe(card);
   }
   details.innerHTML = detailsHtml(d);
   details.inert = !open; details.setAttribute('aria-hidden', String(!open));
   card.setAttribute('aria-label', `Matcha Club · ${d.first_name || ''} · ${d.member_no || ''}`);
-  kc.classList.toggle('is-expired', !!(d.membership && ['expired', 'refunded', 'cancelled'].includes(d.membership.status)));
+  kc.classList.toggle('is-off', !!(d.membership && ['expired', 'refunded', 'cancelled'].includes(d.membership.status)));
   qrInto($('#kcQr', card), d.card_url);
   $('#extra').innerHTML = extraHtml(d);
   measure();
