@@ -8,15 +8,15 @@
     },
     {
       "source": "/staff/club",
-      "destination": "/staff-club.html"
+      "destination": "/staff-club"
     },
     {
       "source": "/staff/login",
-      "destination": "/staff.html"
+      "destination": "/staff"
     },
     {
       "source": "/m/:token",
-      "destination": "/member.html"
+      "destination": "/member"
     }
   ],
   "headers": [
