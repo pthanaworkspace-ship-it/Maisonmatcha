@@ -105,7 +105,7 @@ async function view(id) {
   const reds = d0.redemptions.map((r) => `<tr class="${r.reversed_at ? 'strike-row' : ''}"><td class="small num">${laoDateTime(r.created_at)}</td><td>${esc(drinkName(r.drink, r.milk))}${r.reversed_at ? ' <span class="chip st-cancelled">ຍົກເລີກ</span>' : ''}<div class="tiny muted">${esc(r.order_no || '')}${r.oat_fee ? ` · ນົມໂອ໊ດ +${money(r.oat_fee, { symbol: true })} (${r.order_payment === 'paid' ? 'ຈ່າຍແລ້ວ' : `ຄ້າງ <button class="btn small ghost" data-oat="${r.id}">ເກັບເງິນ</button>`})` : ''}${r.reversed_at ? ` · ${esc(r.reverse_reason)} — ${esc(r.reversed_by_name || '')}` : ''}</div></td><td class="r num">${r.qty}</td><td class="small">${esc(r.staff_name || '')}</td>${admin ? `<td>${r.reversed_at ? '' : `<button class="btn small ghost" data-rev="${r.id}">ຍົກເລີກ</button>`}</td>` : ''}</tr>`).join('');
   const closed = ['refunded', 'cancelled'].includes(m.st);
   const d = dialog(`${esc(m.name)} ${stChip(m.st)}`, `<div class="mc-card" id="mcCard">
-      <div class="mc-top"><img src="/logo.webp" alt="Maison Matcha"><div class="mc-club">MATCHA CLUB<small>ສະມາຊິກມັດສະ</small></div></div>
+      <div class="mc-top"><img src="/logo.webp" alt="Maison Matcha"><div class="mc-club">MATCHA CLUB<small>ສະມາຊິກມັດຊະ</small></div></div>
       <div class="mc-name">${esc(m.name)}</div><div class="mc-no num">${esc(m.member_no)}</div>
       <div class="mc-body"><div><div class="mc-pkg">${esc(m.pkg_name)}</div><div class="mc-dots">${dots}</div>
         <div class="mc-stats num"><div><b>${m.total}</b><span>ທັງໝົດ</span></div><div><b>${m.used}</b><span>ແລກແລ້ວ</span></div><div><b>${m.rem}</b><span>ເຫຼືອ</span></div></div>
@@ -126,11 +126,17 @@ async function view(id) {
     <div class="table-wrap"><table class="simple"><thead><tr><th>ເວລາ</th><th>ເຄື່ອງດື່ມ</th><th class="r">ຈອກ</th><th>ພະນັກງານ</th>${admin ? '<th></th>' : ''}</tr></thead><tbody>${reds || '<tr><td colspan="5" class="muted">ຍັງບໍ່ມີ</td></tr>'}</tbody></table></div>
     ${d0.adjustments.length ? `<h3 style="margin-top:16px">ການປັບ / ຄືນເງິນ</h3>${d0.adjustments.map((a) => `<div class="alert ${a.type === 'cups' ? 'info' : 'err'}">${a.type === 'refund' ? `ຄືນເງິນ ${money(a.amount)} · ${PAY[a.method]}` : a.type === 'cancel' ? 'ຍົກເລີກສະມາຊິກ' : `ປັບຈອກ ${a.cups > 0 ? '+' : ''}${a.cups}`} — ${esc(a.reason)} <span class="tiny">(${esc(a.user_name || '')} · ${laoDateTime(a.created_at)})</span></div>`).join('')}` : ''}
     <details style="margin-top:14px"><summary class="small">ບັນທຶກການກວດສອບ (audit trail)</summary><ul class="timeline">${d0.events.map((e) => `<li><time>${laoDateTime(e.created_at)}</time> ${esc(e.type)} — ${esc(e.user_name || '')} <span class="tiny muted">${esc(JSON.stringify(e.details))}</span></li>`).join('')}</ul></details>
-    ${admin && !closed ? `<div class="row" style="margin-top:14px"><button class="btn small ghost" data-adj="cups">ປັບຈຳນວນຈອກ</button><button class="btn small ghost" data-edit>ແກ້ໄຂ</button>${m.pay_status === 'confirmed' ? '<button class="btn small danger" data-adj="refund">ຄືນເງິນ</button>' : '<button class="btn small danger" data-adj="cancel">ຍົກເລີກ</button>'}</div>` : ''}`);
+    ${admin && !closed ? `<div class="row" style="margin-top:14px"><button class="btn small ghost" data-adj="cups">ປັບຈຳນວນຈອກ</button><button class="btn small ghost" data-edit>ແກ້ໄຂ</button>${m.pay_status === 'confirmed' ? '<button class="btn small danger" data-adj="refund">ຄືນເງິນ</button>' : '<button class="btn small danger" data-adj="cancel">ຍົກເລີກ</button>'}</div>` : ''}
+    ${admin ? '<div class="row" style="margin-top:8px"><button class="btn small ghost" data-rotate>ປ່ຽນລິ້ງບັດ ແລະ QR</button></div>' : ''}`);
   d.classList.add('wide-dlg'); qrInto($('#mcQr', d), d0.card_url);
   $('#cpy', d).addEventListener('click', async () => { try { await navigator.clipboard.writeText(d0.card_url); toast('ສຳເນົາແລ້ວ', 'ok'); } catch { toast(d0.card_url); } });
   d.addEventListener('click', (e) => {
-    const t = e.target.closest('[data-rev],[data-adj],[data-edit],[data-view],[data-redeem],[data-pay],[data-renew],[data-oat]'); if (!t || !d.contains(t)) return; e.preventDefault();
+    const t = e.target.closest('[data-rev],[data-adj],[data-edit],[data-view],[data-redeem],[data-pay],[data-renew],[data-oat],[data-rotate]'); if (!t || !d.contains(t)) return; e.preventDefault();
+    if (t.dataset.rotate !== undefined) {
+      ask('ປ່ຽນລິ້ງບັດ ແລະ QR', '<p>ລິ້ງ ແລະ QR ເກົ່າຈະໃຊ້ບໍ່ໄດ້ທັນທີ. ສົ່ງລິ້ງໃໝ່ໃຫ້ລູກຄ້າ. ບັດໃນ Apple Wallet ຈະອັບເດດເອງ.</p><p class="small muted">ໃຊ້ເມື່ອລິ້ງບັດຖືກສົ່ງຕໍ່ໃຫ້ຄົນອື່ນ ຫຼື ລູກຄ້າເສຍໂທລະສັບ.</p>',
+        async () => { await api(`/members/${m.member_id}/rotate-card`, { method: 'POST' }); toast('ປ່ຽນລິ້ງແລ້ວ', 'ok'); d.close(); view(m.id); }, { ok: 'ປ່ຽນລິ້ງ', danger: true });
+      return;
+    }
     if (t.dataset.oat) collectOat(t.dataset.oat, () => { d.close(); view(m.id); });
     else if (t.dataset.rev) reverse(t.dataset.rev, m.id, d);
     else if (t.dataset.adj) adjust(m, t.dataset.adj, d);

@@ -156,6 +156,23 @@ async function load() {
   kc.classList.remove('is-loading'); $('.kc-skel', kc)?.remove();
   build(d);
   btn.disabled = false; btn.hidden = false; if (!open) btn.innerHTML = BTN_OPEN;
+  wallet(d);
+}
+
+// ───────── Apple Wallet: only on Apple devices, only when the server can sign passes, only with Apple's official badge
+const isApple = () => /iPhone|iPad|iPod|Macintosh/.test(navigator.userAgent) && !/Android/.test(navigator.userAgent);
+function wallet(d) {
+  const box = $('#kcWallet'); if (!box || !d.wallet || !isApple()) { if (box) box.hidden = true; return; }
+  if (box.dataset.ready) { box.hidden = false; return; }
+  const img = new Image();
+  img.onload = () => {
+    box.dataset.ready = '1';
+    box.innerHTML = `<a href="/api/club/wallet/pass/${encodeURIComponent(token)}.pkpass" rel="nofollow"><img src="${img.src}" alt="Add to Apple Wallet"></a>
+      <p>ເພີ່ມບັດໃສ່ Apple Wallet — ຍອດເຫຼືອຈະອັບເດດເອງ<br><span class="en">Your balance updates automatically in Wallet.</span></p>`;
+    box.hidden = false;
+  };
+  img.onerror = () => { box.hidden = true; }; // badge artwork not installed yet → no button
+  img.src = '/wallet/add-to-apple-wallet.svg';
 }
 load();
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); });

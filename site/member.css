@@ -96,7 +96,7 @@ body.member-page::before{content:"";position:fixed;inset:0;background-image:var(
 /* ───── the holder (felt-green paper sleeve with a thumb notch) */
 .kc-holder{
   position:relative;z-index:2;border-radius:12px;color:var(--cream);text-align:center;
-  padding:66px 26px 22px;min-height:470px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;
+  padding:66px 26px 22px;min-height:400px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;
   background:radial-gradient(130% 70% at 50% 10%,#23663F 0%,var(--green) 50%,var(--green-2) 100%);
   box-shadow:0 1px 0 rgba(255,255,255,.08) inset,0 22px 40px rgba(18,40,25,.28),0 6px 12px rgba(18,40,25,.18);
   -webkit-mask:radial-gradient(circle 54px at 50% 0,transparent 53.5px,#000 54.5px);
@@ -109,8 +109,7 @@ body.member-page::before{content:"";position:fixed;inset:0;background-image:var(
 .kc-ritual{display:flex;align-items:center;gap:12px;width:82%;margin-top:14px;font-family:var(--serif);font-weight:600;font-size:.84rem;letter-spacing:.34em;white-space:nowrap}
 .kc-ritual::before,.kc-ritual::after{content:"";flex:1;height:1px;background:rgba(244,238,223,.6)}
 .kc-ritual-lo{font-size:.76rem;opacity:.8;margin-top:4px}
-.kc-bowl{width:170px;height:auto;margin:12px auto 4px;color:var(--cream);opacity:.92}
-.kc-hfoot{margin-top:auto;width:100%;border-top:1px solid rgba(244,238,223,.55);padding-top:12px;font-family:var(--serif);font-weight:600;font-size:.74rem;letter-spacing:.24em}
+.kc-hfoot{margin-top:auto;margin-bottom:0;width:100%;border-top:1px solid rgba(244,238,223,.55);padding-top:12px;font-family:var(--serif);font-weight:600;font-size:.74rem;letter-spacing:.24em}
 
 /* ───── button */
 .kc-actions{display:flex;justify-content:center;margin-top:18px}
@@ -151,3 +150,10 @@ body.member-page::before{content:"";position:fixed;inset:0;background-image:var(
   .kc-card,.kc-peek,.kc-btn{transition:none!important}
   .kc-skel{animation:none}
 }
+
+/* ───── Apple Wallet (official badge artwork; shown only when signing is configured) */
+.kc-wallet{text-align:center;margin-top:16px}
+.kc-wallet a{display:inline-block;line-height:0;border-radius:10px}
+.kc-wallet a:focus-visible{outline:3px solid var(--green);outline-offset:3px}
+.kc-wallet img{height:48px;width:auto}
+.kc-wallet p{font-size:.78rem;color:var(--muted);margin:8px 0 0;line-height:1.45}
