@@ -50,10 +50,11 @@ function derive() {
   const map = {}; D.map.forEach((m) => { map[m.key] = m; }); D.mapBy = map;
   D.dayRows = D.days.map((d) => {
     const p = d.pay || {}; const net = num(d.gross) - num(d.discounts) - num(d.refunds);
-    return { ...d, net, cash: num(p.cash), qr: num(p.qr) + num(p.bcel) + num(p.ldb), card: num(p.card), other: num(p.other) };
+    return { ...d, net, hist: d.source !== 'loyverse', cash: num(p.cash), qr: num(p.qr) + num(p.bcel) + num(p.ldb), card: num(p.card), other: num(p.other) };
   });
   const items = {}; D.items.forEach((it) => { const o = items[it.name] || (items[it.name] = { name: it.name, qty: 0, net: 0, cogs: 0 }); o.qty += num(it.qty); o.net += num(it.net); o.cogs += num(it.cogs); });
-  D.itemRows = Object.values(items).filter((r) => r.qty || r.net).sort((a, b) => b.net - a.net);
+  D.itemRows = Object.values(items).filter((r) => r.qty || r.net).map((r) => ({ ...r, qty: Math.round(r.qty * 10) / 10 })).sort((a, b) => b.net - a.net);
+  D.estItems = D.items.some((it) => it.est); D.histItems = D.items.some((it) => it.source);
   const use = Object.fromEntries(PW.map((p) => [p, 0])); const missing = []; const guesses = [];
   D.itemRows.forEach((r) => {
     const m = map[keyOf(r.name)];
@@ -72,7 +73,8 @@ function info() {
   $('#syncInfo').textContent = parts.join(' ');
   const warn = [];
   if (s.last_error) warn.push(`<div class="alert err">ດຶງຂໍ້ມູນຈາກ Loyverse ບໍ່ສຳເລັດ: ${esc(s.last_error)}</div>`);
-  if (s.oldest && D.from <= s.oldest) warn.push(`<div class="alert warn">ຂໍ້ມູນ Loyverse ມີຕັ້ງແຕ່ ${esc(s.oldest)} (ແພັກເກດ Loyverse ໃຫ້ດຶງໄດ້ພຽງ 31 ມື້ຍ້ອນຫຼັງ). ມື້ ${esc(s.oldest)} ອາດບໍ່ຄົບ.</div>`);
+  const hist = D.dayRows.filter((r) => r.hist);
+  if (hist.length) warn.push(`<div class="alert info">${esc(hist[0].date)} – ${esc(hist[hist.length - 1].date)}: ໃຊ້ຂໍ້ມູນເກົ່າຈາກລາຍງານປິດຮ້ານ (Notion) ແລະ ການປ້ອນເອງໃນລະບົບບໍລິຫານ — ມີແຕ່ຍອດຂາຍລວມ, ບໍ່ມີລາຍລະອຽດບິນ ແລະ ປະເພດການຊຳລະຈາກ Loyverse.${D.histItems ? ' ລາຍການສິນຄ້າ 1–18/10 ມາຈາກ Export Loyverse ເດືອນຕຸລາ' + (D.estItems ? ' (ເລືອກພຽງບາງມື້ໃນຊ່ວງນັ້ນ — ຕົວເລກສິນຄ້າແມ່ນການປະມານ)' : '') + '.' : ''}</div>`);
   D.warn = warn.join('');
 }
 
@@ -85,16 +87,17 @@ function kpis(cards) { return `<div class="counts club-kpis">${cards.map(([v, l,
 function overview() {
   const R = D.dayRows; const sum = (f) => R.reduce((s, r) => s + f(r), 0);
   const gross = sum((r) => num(r.gross)), disc = sum((r) => num(r.discounts)), ref = sum((r) => num(r.refunds)), net = sum((r) => r.net), tx = sum((r) => num(r.tx));
+  const txDays = R.filter((r) => num(r.tx) > 0); const txNet = txDays.reduce((s, r) => s + r.net, 0);
   const cash = sum((r) => r.cash), qr = sum((r) => r.qr), card = sum((r) => r.card), other = sum((r) => r.other);
   const max = Math.max(1, ...R.map((r) => r.net));
   const bars = R.length ? `<div class="bars" role="img" aria-label="ຍອດສຸດທິລາຍວັນ">${R.map((r) => { const wd = new Date(`${r.date}T00:00:00Z`).getUTCDay(); return `<i class="${wd === 0 || wd === 6 ? 'wk' : ''}" style="height:${Math.max(2, r.net / max * 100)}%" title="${dLabel(r.date)} · ${k(r.net)}"></i>`; }).join('')}</div><div class="bars-x"><span>${dLabel(R[0].date)}</span><span>${dLabel(R[R.length - 1].date)}</span></div>` : '';
   const mix = [['ເງິນສົດ', cash], ['QR (BCEL + LDB)', qr], ['ບັດ', card], ['ອື່ນໆ', other]].filter(([, v]) => v);
   $('#body').innerHTML = `${D.warn}
-    ${kpis([[k(net), 'ຍອດສຸດທິ'], [k(gross), 'ຍອດຂາຍລວມ'], [k(disc), 'ສ່ວນຫຼຸດ'], [k(ref), 'ຄືນເງິນ', ref > 0], [tx.toLocaleString(), 'ບິນ'], [D.drinks.toLocaleString(), 'ເຄື່ອງດື່ມມັດຊະ'], [k(tx ? net / tx : 0), 'ສະເລ່ຍຕໍ່ບິນ'], [D.clubCups.toLocaleString(), 'ຈອກ Matcha Club']])}
+    ${kpis([[k(net), 'ຍອດສຸດທິ'], [k(gross), 'ຍອດຂາຍລວມ'], [k(disc), 'ສ່ວນຫຼຸດ'], [k(ref), 'ຄືນເງິນ', ref > 0], [tx.toLocaleString(), txDays.length < R.length ? 'ບິນ (ມື້ທີ່ມີຂໍ້ມູນ)' : 'ບິນ'], [D.drinks.toLocaleString(), 'ເຄື່ອງດື່ມມັດຊະ'], [k(tx ? txNet / tx : 0), 'ສະເລ່ຍຕໍ່ບິນ'], [D.clubCups.toLocaleString(), 'ຈອກ Matcha Club']])}
     <div class="panel"><h2>ຍອດສຸດທິລາຍວັນ</h2>${bars || '<p class="muted">ບໍ່ມີຂໍ້ມູນໃນຊ່ວງນີ້</p>'}
       ${mix.length ? `<div class="row" style="flex-wrap:wrap;margin-top:14px">${mix.map(([l, v]) => `<div><div class="small muted">${l}</div><b class="num">${k(v)}</b> <span class="tiny muted">${net ? Math.round(v / net * 100) : 0}%</span></div>`).join('')}</div>` : ''}</div>
     <div class="panel"><h2>ລາຍວັນ</h2><div class="table-wrap"><table class="simple"><thead><tr><th>ວັນທີ</th><th class="r">ຍອດລວມ</th><th class="r">ສ່ວນຫຼຸດ</th><th class="r">ຄືນເງິນ</th><th class="r">ສຸດທິ</th><th class="r">ບິນ</th><th class="r">ເງິນສົດ</th><th class="r">QR</th><th class="r">ບັດ</th></tr></thead><tbody>
-      ${R.slice().reverse().map((r) => `<tr><td>${esc(r.date)}</td><td class="r num">${k(r.gross)}</td><td class="r num">${r.discounts ? k(r.discounts) : '—'}</td><td class="r num">${r.refunds ? k(r.refunds) : '—'}</td><td class="r num"><b>${k(r.net)}</b></td><td class="r num">${num(r.tx)}</td><td class="r num">${k(r.cash)}</td><td class="r num">${k(r.qr)}</td><td class="r num">${r.card ? k(r.card) : '—'}</td></tr>`).join('') || '<tr><td colspan="9" class="muted">ບໍ່ມີຂໍ້ມູນ</td></tr>'}
+      ${R.slice().reverse().map((r) => `<tr><td>${esc(r.date)}${r.hist ? ` <span class="tiny muted">${r.source === 'manual' ? 'ປ້ອນເອງ' : 'Notion'}</span>` : ''}</td><td class="r num">${k(r.gross)}</td><td class="r num">${r.discounts ? k(r.discounts) : '—'}</td><td class="r num">${r.refunds ? k(r.refunds) : '—'}</td><td class="r num"><b>${k(r.net)}</b></td><td class="r num">${r.tx == null ? '—' : num(r.tx)}</td><td class="r num">${r.hist ? '—' : k(r.cash)}</td><td class="r num">${r.hist ? '—' : k(r.qr)}</td><td class="r num">${!r.hist && r.card ? k(r.card) : '—'}</td></tr>`).join('') || '<tr><td colspan="9" class="muted">ບໍ່ມີຂໍ້ມູນ</td></tr>'}
       </tbody></table></div></div>`;
 }
 function itemsTab() {
@@ -169,12 +172,12 @@ function recon(r) {
   const c = D.closeBy[r.date];
   if (!c) return { c: null, status: ['ຍັງບໍ່ໃສ່ເງິນທີ່ນັບ', 'st-completed'] };
   const cash = num(c.cash) - num(c.float); const qr = num(c.bcel) + num(c.ldb); const got = cash + qr + num(c.card) + num(c.other);
-  const diff = got - r.net; const dc = cash - r.cash; const dq = qr - r.qr; const dk = num(c.card) - r.card;
+  const exp = r.net - num(c.owner_disc); const diff = got - exp; const dc = cash - r.cash; const dq = qr - r.qr; const dk = num(c.card) - r.card;
   let status;
   if (Math.abs(diff) > 1000) status = [diff < 0 ? `ຂາດ ${k(-diff)}` : `ເກີນ ${k(diff)}`, 'pay-unpaid'];
-  else if (Math.abs(dc) > 1000 || Math.abs(dq) > 1000 || Math.abs(dk) > 1000) status = ['ຍອດກົງ · ປະເພດຊຳລະບໍ່ກົງ', 'pay-pending_verification'];
+  else if (!r.hist && (Math.abs(dc) > 1000 || Math.abs(dq) > 1000 || Math.abs(dk) > 1000)) status = ['ຍອດກົງ · ປະເພດຊຳລະບໍ່ກົງ', 'pay-pending_verification'];
   else status = ['ກົງກັນ', 'pay-paid'];
-  return { c, cash, qr, got, diff, dc, dq, dk, status };
+  return { c, cash, qr, got, exp, diff, dc, dq, dk, status };
 }
 function cashTab() {
   const R = D.dayRows.slice().reverse(); const rows = R.map((r) => ({ r, x: recon(r) }));
@@ -184,21 +187,22 @@ function cashTab() {
   $('#body').innerHTML = `${D.warn}
     ${kpis([[`${done.length}/${R.length}`, 'ມື້ທີ່ໃສ່ເງິນທີ່ນັບແລ້ວ'], [String(off.length), 'ມື້ທີ່ບໍ່ກົງ', off.length > 0], [(sumDiff > 0 ? '+' : '') + k(sumDiff), 'ຜົນຕ່າງລວມ', Math.abs(sumDiff) > 1000]])}
     <div class="panel"><h2>ກວດເງິນ: Loyverse ທຽບກັບເງິນທີ່ນັບ</h2>
-      <p class="small muted">Loyverse ບັນທຶກ BCEL ແລະ LDB ລວມກັນເປັນ “QR CODE”, ສະນັ້ນທຽບ QR ກັບ BCEL + LDB. ເງິນສົດທີ່ນັບ = ເງິນໃນລິ້ນຊັກ − ເງິນທອນ. ກົດແຖວເພື່ອໃສ່ ຫຼື ແກ້ເງິນທີ່ນັບ.</p>
-      <div class="table-wrap"><table class="simple"><thead><tr><th>ວັນທີ</th><th class="r">Loyverse ສຸດທິ</th><th class="r">ນັບໄດ້</th><th class="r">ເງິນສົດ</th><th class="r">QR</th><th class="r">ບັດ</th><th>ສະຖານະ</th></tr></thead><tbody>
-      ${rows.map(({ r, x }) => `<tr class="click" data-day="${r.date}" tabindex="0"><td>${esc(r.date)}</td><td class="r num">${k(r.net)}</td>${x.c ? `<td class="r num">${k(x.got)}</td>${cell(x.dc)}${cell(x.dq)}${cell(x.dk)}` : '<td class="r muted">—</td><td></td><td></td><td></td>'}<td><span class="chip ${x.status[1]}">${esc(x.status[0])}</span></td></tr>`).join('') || '<tr><td colspan="7" class="muted">ບໍ່ມີຂໍ້ມູນ</td></tr>'}
+      <p class="small muted">Loyverse ບັນທຶກ BCEL ແລະ LDB ລວມກັນເປັນ “QR CODE”, ສະນັ້ນທຽບ QR ກັບ BCEL + LDB. ເງິນສົດທີ່ນັບ = ເງິນໃນລິ້ນຊັກ − ເງິນທອນ. ຄວນໄດ້ຮັບ = ຍອດສຸດທິ − ສ່ວນຫຼຸດເຈົ້າຂອງທີ່ບໍ່ໄດ້ຄິດໃນ POS. ມື້ກ່ອນ 19/10 ທຽບໄດ້ແຕ່ຍອດລວມ. ກົດແຖວເພື່ອໃສ່ ຫຼື ແກ້ເງິນທີ່ນັບ.</p>
+      <div class="table-wrap"><table class="simple"><thead><tr><th>ວັນທີ</th><th class="r">ຄວນໄດ້ຮັບ</th><th class="r">ນັບໄດ້</th><th class="r">ເງິນສົດ</th><th class="r">QR</th><th class="r">ບັດ</th><th>ສະຖານະ</th></tr></thead><tbody>
+      ${rows.map(({ r, x }) => `<tr class="click" data-day="${r.date}" tabindex="0"><td>${esc(r.date)}</td><td class="r num">${k(x.c ? x.exp : r.net)}${r.hist ? ` <span class="tiny muted">${r.source === 'manual' ? 'ປ້ອນເອງ' : 'Notion'}</span>` : ''}</td>${x.c ? `<td class="r num">${k(x.got)}</td>${r.hist ? '<td class="r muted">·</td><td class="r muted">·</td><td class="r muted">·</td>' : `${cell(x.dc)}${cell(x.dq)}${cell(x.dk)}`}` : '<td class="r muted">—</td><td></td><td></td><td></td>'}<td><span class="chip ${x.status[1]}">${esc(x.status[0])}</span></td></tr>`).join('') || '<tr><td colspan="7" class="muted">ບໍ່ມີຂໍ້ມູນ</td></tr>'}
       </tbody></table></div></div>`;
   $$('[data-day]').forEach((tr) => { const go = () => closeForm(tr.dataset.day); tr.addEventListener('click', go); tr.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); }); });
 }
 function closeForm(day) {
   const r = D.dayRows.find((x) => x.date === day); const c = D.closeBy[day] || {};
   const f = (name, label) => `<label class="field"><span>${label}</span><input name="${name}" inputmode="numeric" value="${c[name] ? num(c[name]) : ''}"></label>`;
-  form(`ເງິນທີ່ນັບ · ${esc(day)}`, `<div class="alert info small">Loyverse: ສຸດທິ ${k(r.net)} · ເງິນສົດ ${k(r.cash)} · QR ${k(r.qr)} · ບັດ ${k(r.card)}</div>
+  form(`ເງິນທີ່ນັບ · ${esc(day)}`, `<div class="alert info small">${r.hist ? `ຍອດຂາຍ (Notion / ປ້ອນເອງ): ${k(r.net)}` : `Loyverse: ສຸດທິ ${k(r.net)} · ເງິນສົດ ${k(r.cash)} · QR ${k(r.qr)} · ບັດ ${k(r.card)}`}</div>
     <div class="row">${f('cash', 'ເງິນສົດໃນລິ້ນຊັກ')}${f('float', 'ເງິນທອນ (ຫັກອອກ)')}</div>
     <div class="row">${f('bcel', 'BCEL')}${f('ldb', 'LDB')}</div>
     <div class="row">${f('card', 'ບັດ')}${f('other', 'ອື່ນໆ')}</div>
+    ${f('owner_disc', 'ສ່ວນຫຼຸດເຈົ້າຂອງ / ພະນັກງານ ທີ່ບໍ່ໄດ້ຄິດໃນ POS')}
     <label class="field"><span>ໝາຍເຫດ</span><textarea name="note" rows="2">${esc(c.note || '')}</textarea></label>
-    ${c.by_name ? `<p class="tiny muted">ບັນທຶກໂດຍ ${esc(c.by_name)}</p>` : ''}`,
+    ${c.by_name ? `<p class="tiny muted">ບັນທຶກໂດຍ ${esc(c.by_name)}${c.source && c.source !== 'website' ? ' · ນຳເຂົ້າຈາກລະບົບບໍລິຫານ' : ''}</p>` : ''}`,
   async (v) => { await api(`/sales/closing/${day}`, { method: 'PUT', body: v }); toast('ບັນທຶກແລ້ວ', 'ok'); await load(); });
 }
 
@@ -206,10 +210,10 @@ function closeForm(day) {
 async function excel() {
   await loadScript('/xlsx.full.min.js'); const X = window.XLSX; const wb = X.utils.book_new();
   const add = (name, rows) => X.utils.book_append_sheet(wb, X.utils.json_to_sheet(rows.length ? rows : [{ note: 'No data' }]), name);
-  add('Daily', D.dayRows.map((r) => ({ date: r.date, gross: num(r.gross), discounts: num(r.discounts), refunds: num(r.refunds), net: r.net, receipts: num(r.tx), cash: r.cash, qr: r.qr, card: r.card, other: r.other })));
+  add('Daily', D.dayRows.map((r) => ({ date: r.date, source: r.source, gross: num(r.gross), discounts: num(r.discounts), refunds: num(r.refunds), net: r.net, receipts: r.tx == null ? '' : num(r.tx), cash: r.hist ? '' : r.cash, qr: r.hist ? '' : r.qr, card: r.hist ? '' : r.card, other: r.hist ? '' : r.other })));
   add('Items', D.itemRows.map((r) => { const m = D.mapBy[keyOf(r.name)]; return { item: r.name, qty: r.qty, net: r.net, cost: r.cogs, powder: m && m.powder ? POWDER[m.powder] : '', grams_per_drink: m ? num(m.grams) : '' }; }));
   add('Matcha', PW.map((p) => ({ powder: POWDER[p], used_g: Math.round(D.use[p]), avg_per_day_g: Math.round(D.use[p] / Math.max(1, D.dayRows.length)) })));
-  add('Reconciliation', D.dayRows.map((r) => { const x = recon(r); return { date: r.date, loyverse_net: r.net, loyverse_cash: r.cash, loyverse_qr: r.qr, loyverse_card: r.card, counted: x.c ? x.got : '', counted_cash: x.c ? x.cash : '', counted_bcel_ldb: x.c ? x.qr : '', counted_card: x.c ? num(x.c.card) : '', difference: x.c ? x.diff : '', status: x.status[0], note: x.c ? x.c.note || '' : '' }; }));
+  add('Reconciliation', D.dayRows.map((r) => { const x = recon(r); return { date: r.date, source: r.source, net_sales: r.net, owner_discount: x.c ? num(x.c.owner_disc) : '', expected: x.c ? x.exp : '', loyverse_cash: r.hist ? '' : r.cash, loyverse_qr: r.hist ? '' : r.qr, loyverse_card: r.hist ? '' : r.card, counted: x.c ? x.got : '', counted_cash: x.c ? x.cash : '', counted_bcel_ldb: x.c ? x.qr : '', counted_card: x.c ? num(x.c.card) : '', difference: x.c ? x.diff : '', status: x.status[0], note: x.c ? x.c.note || '' : '' }; }));
   X.writeFile(wb, `maison-matcha-sales-${D.from}-to-${D.to}.xlsx`);
 }
 
