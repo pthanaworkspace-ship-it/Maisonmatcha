@@ -35,14 +35,14 @@ function detailsHtml(c) {
   const per = c.per || 10; const n = Math.min(per, Math.max(0, c.stamps));
   const dots = Array.from({ length: per }, (_, i) => `<li class="kc-dot${i < n ? ' on' : ''}"></li>`).join('');
   const reward = c.available > 0 ? `<div class="kc-reward" role="status">
-      <div class="kc-reward-t">YOU’VE EARNED A FREE MATCHA!</div><div class="kc-reward-lo">ທ່ານໄດ້ຮັບມັດຊະຟຣີ!${c.available > 1 ? ` × ${c.available}` : ''}</div>
-      <button class="kc-reward-b" type="button" id="kcRedeem">ແລກທີ່ Maison Matcha · <span class="en">Redeem at Maison Matcha</span></button>
+      <div class="kc-reward-x"><div class="kc-reward-t">YOU’VE EARNED A FREE MATCHA!</div><div class="kc-reward-lo">ທ່ານໄດ້ຮັບມັດຊະຟຣີ!${c.available > 1 ? ` × ${c.available}` : ''}</div></div>
+      <button class="kc-reward-b" type="button" id="kcRedeem">ແລກທີ່ເຄົາເຕີ · <span class="en">Redeem</span></button>
       <div class="kc-reward-n" id="kcRedeemNote" hidden>ສະແດງ QR ນີ້ໃຫ້ພະນັກງານ — ພະນັກງານຈະແລກໃຫ້ທ່ານ.<br><span class="en">Show this QR to our staff — they will redeem it for you.</span></div></div>` : '';
   const left = c.available > 0 && n === 0 ? '' : `<div class="kc-next">${c.to_next} MORE ${c.to_next === 1 ? 'CUP' : 'CUPS'} TO YOUR FREE MATCHA<span>ອີກ ${c.to_next} ຈອກ ຮັບມັດຊະຟຣີ 1 ຈອກ</span></div>`;
-  const st = `<div class="kc-st">Member since</div><div class="kc-st-d">${dLo(c.joined)}</div><div class="kc-st-lo">ເປັນສະມາຊິກຕັ້ງແຕ່</div>`;
+  // compact card: everything a member needs at the counter fits one phone screen; totals live below the card
   return `<div class="kc-rule"></div>
-    <div class="kc-lbl">MEMBER NAME · ຊື່ສະມາຊິກ</div><div class="kc-name${String(c.name || '').length > 22 ? ' long' : ''}">${esc(c.name)}</div>
-    <div class="kc-lbl">MEMBER ID · ລະຫັດສະມາຊິກ</div><div class="kc-id">${esc(c.member_no)}</div>
+    <div class="kc-lbl">MEMBER NAME · ຊື່ສະມາຊິກ</div><div class="kc-name" id="kcName">${esc(c.name)}</div>
+    <div class="kc-idrow"><span class="kc-lbl">MEMBER ID · ລະຫັດສະມາຊິກ</span><span class="kc-id">${esc(c.member_no)}</span></div>
     <div class="kc-rule"></div>
     <div class="kc-plan">YOUR MATCHA STAMPS <span>ສະແຕັມມັດຊະຂອງທ່ານ</span></div>
     <ul class="kc-dots" role="img" aria-label="${n} of ${per} stamps">${dots}</ul>
@@ -50,21 +50,25 @@ function detailsHtml(c) {
     ${left}${reward}
     ${c.owed ? `<div class="kc-note">${c.owed} stamp(s) to make up after a refund · ຕ້ອງສະສົມຄືນ ${c.owed} ສະແຕັມ ຫຼັງການຄືນເງິນ</div>` : ''}
     <div class="kc-rule"></div>
-    <div class="kc-stats">
-      <div><b>${c.available}</b><small>Available free drinks</small><span>ເຄື່ອງດື່ມຟຣີທີ່ແລກໄດ້</span></div>
-      <div><b>${c.purchased}</b><small>Total drinks purchased</small><span>ເຄື່ອງດື່ມທີ່ຊື້ທັງໝົດ</span></div>
-      <div><b>${c.redeemed}</b><small>Total rewards redeemed</small><span>ແລກຂອງລາງວັນແລ້ວ</span></div>
-    </div>
-    <div class="kc-rule"></div>
-    <div class="kc-foot"><div>${st}</div><span class="kc-dia" aria-hidden="true"></span>
-      <div class="kc-qrw"><div class="kc-qr" id="kcQr" role="img" aria-label="Member QR code"></div></div></div>
-    <div class="kc-qr-cap">ສະແດງ QR ນີ້ທີ່ເຄົາເຕີ ເພື່ອສະສົມສະແຕັມ ຫຼື ແລກມັດຊະຟຣີ<br><span class="en">Show this QR at the counter to collect stamps or redeem a free matcha.</span></div>
-    <button class="kc-close" type="button">ເກັບບັດ · <span class="en">Put card away</span></button>`;
+    <div class="kc-foot"><div class="kc-foot-t"><div class="kc-show-lo">ສະແດງ QR ນີ້ທີ່ເຄົາເຕີ</div><div class="kc-show">Show this QR at the counter</div>
+      <div class="kc-since">Member since <b>${dLo(c.joined)}</b><span>ເປັນສະມາຊິກຕັ້ງແຕ່</span></div></div>
+      <div class="kc-qr" id="kcQr" role="img" aria-label="Member QR code"></div></div>`;
+}
+// long names: shrink to fit one line; very long names wrap onto two lines at the smallest size
+function fitName() {
+  const el = card && $('#kcName', card); if (!el || !el.clientWidth) return;
+  el.style.whiteSpace = 'nowrap'; let size = 1.6; el.style.fontSize = `${size}rem`;
+  while (el.scrollWidth > el.clientWidth + 1 && size > 1.1) { size = Math.round((size - 0.05) * 100) / 100; el.style.fontSize = `${size}rem`; }
+  if (el.scrollWidth > el.clientWidth + 1) el.style.whiteSpace = 'normal';
 }
 const KIND = { earn: ['+', 'ສະແຕັມ', 'stamps'], refund: ['−', 'ຄືນເງິນ', 'refund'], adjust: ['±', 'ປັບໂດຍຮ້ານ', 'adjusted by the café'], reward: ['★', 'ໄດ້ຮັບມັດຊະຟຣີ', 'free matcha earned'], redeemed: ['☕', 'ແລກມັດຊະຟຣີ', 'free matcha redeemed'] };
 function extraHtml(c) {
   const h = c.history || [];
-  return `${h.length ? `<section class="mp-panel"><h2>ປະຫວັດ <span class="en" style="font-weight:400;color:var(--muted);font-size:.85rem">· History</span></h2><table class="mp-hist">${h.map((x) => {
+  return `<section class="mp-panel kc-stats-p"><div class="kc-stats">
+      <div><b>${c.available}</b><small>Free drinks to redeem</small><span>ເຄື່ອງດື່ມຟຣີທີ່ແລກໄດ້</span></div>
+      <div><b>${c.purchased}</b><small>Drinks purchased</small><span>ເຄື່ອງດື່ມທີ່ຊື້ທັງໝົດ</span></div>
+      <div><b>${c.redeemed}</b><small>Rewards redeemed</small><span>ແລກຂອງລາງວັນແລ້ວ</span></div></div></section>
+    ${h.length ? `<section class="mp-panel"><h2>ປະຫວັດ <span class="en" style="font-weight:400;color:var(--muted);font-size:.85rem">· History</span></h2><table class="mp-hist">${h.map((x) => {
     const k = KIND[x.kind] || ['', x.kind, x.kind]; const q = x.kind === 'reward' || x.kind === 'redeemed' ? '' : `${x.qty > 0 ? '+' : ''}${x.qty}`;
     return `<tr><td>${dLo(x.at)}</td><td>${esc(k[1])}${x.drink ? ` · ${esc(x.drink.lo)}` : ''}<div class="s en">${esc(k[2])}${x.drink ? ` · ${esc(x.drink.en)}` : ''}</div></td><td class="r">${esc(q || k[0])}</td></tr>`;
   }).join('')}</table></section>` : ''}
@@ -82,11 +86,11 @@ function build(c) {
     pocket.insertBefore(card, holder);
     details = $('#kcDetails', card);
     card.addEventListener('click', (e) => {
-      if (e.target.closest('.kc-close')) { toggle(false); return; }
       if (e.target.closest('#kcRedeem')) { const n = $('#kcRedeemNote', card); n.hidden = false; $('#kcQr', card).classList.add('pulse'); $('#kcQr', card).scrollIntoView({ block: 'center', behavior: reduce() ? 'auto' : 'smooth' }); return; }
       if (!open && !e.target.closest('button')) toggle(true);
     });
-    if ('ResizeObserver' in window) new ResizeObserver(measure).observe(card);
+    if ('ResizeObserver' in window) new ResizeObserver(() => { fitName(); measure(); }).observe(card);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fitName(); measure(); });
   }
   details.innerHTML = detailsHtml(c);
   details.inert = !open; details.setAttribute('aria-hidden', String(!open));
@@ -94,7 +98,7 @@ function build(c) {
   kc.classList.toggle('is-reward', c.available > 0);
   qrInto($('#kcQr', card), c.qr);
   $('#extra').innerHTML = extraHtml(c); wireExtra();
-  measure();
+  fitName(); measure();
 }
 function wireExtra() {
   $('#forgetBtn').addEventListener('click', () => {
@@ -150,7 +154,18 @@ async function cardImage(c) {
   g.font = font('500', 32, 'Noto Sans Lao, sans-serif'); g.fillText('ສະມາຊິກ Maison Matcha', W - 120, 240);
   g.fillRect(120, 320, W - 240, 2);
   g.textAlign = 'left'; g.font = font('600', 30); g.globalAlpha = 0.75; g.fillText('MEMBER NAME', 120, 385); g.globalAlpha = 1;
-  g.font = font('600', c.name.length > 22 ? 56 : 72); g.fillText(c.name.toUpperCase().slice(0, 34), 120, 465);
+  { // fit the name inside the card: shrink, then two lines for very long names
+    const nm = String(c.name).toUpperCase().slice(0, 60); const maxW = W - 240; let size = 72; g.font = font('600', size);
+    while (g.measureText(nm).width > maxW && size > 46) { size -= 2; g.font = font('600', size); }
+    if (g.measureText(nm).width <= maxW) g.fillText(nm, 120, 465);
+    else {
+      const words = nm.split(/\s+/); let a = ''; let i = 0;
+      while (i < words.length && g.measureText(`${a} ${words[i]}`.trim()).width <= maxW) { a = `${a} ${words[i]}`.trim(); i++; }
+      if (!a) { a = words[0]; i = 1; }
+      let b = words.slice(i).join(' '); while (b && g.measureText(b).width > maxW) b = `${b.slice(0, -2)}…`;
+      g.fillText(a, 120, 432); g.fillText(b, 120, 432 + size + 4);
+    }
+  }
   g.font = font('600', 30); g.globalAlpha = 0.75; g.fillText('MEMBER ID', 120, 535); g.globalAlpha = 1;
   g.font = font('500', 54); g.fillText(c.member_no.split('').join(' '), 120, 600);
   g.fillRect(120, 650, W - 240, 2);
@@ -159,7 +174,7 @@ async function cardImage(c) {
   for (let r = 0; r < k; r++) for (let col = 0; col < k; col++) if (q.isDark(r, col)) g.fillRect(qx + (col + 2) * cell, qy + (r + 2) * cell, cell, cell);
   g.textAlign = 'center'; g.fillStyle = '#1E4F31'; g.font = font('500', 34, 'Noto Sans Lao, sans-serif'); g.fillText('ສະແດງ QR ນີ້ທີ່ເຄົາເຕີ', W / 2, qy + qs + 70);
   g.font = font('500', 30, 'Solway, Georgia, serif'); g.fillText('Show this QR at the counter', W / 2, qy + qs + 115);
-  g.font = font('600', 28); g.globalAlpha = 0.8; g.fillText('BUY 10 DRINKS, GET 1 FREE · LIVE STAMPS ON YOUR CARD LINK', W / 2, H - 120); g.globalAlpha = 1;
+  { const t = 'BUY 10 DRINKS, GET 1 FREE · LIVE STAMPS ON YOUR CARD LINK'; let z = 28; g.font = font('600', z); while (g.measureText(t).width > W - 200 && z > 18) { z -= 1; g.font = font('600', z); } g.globalAlpha = 0.8; g.fillText(t, W / 2, H - 120); } g.globalAlpha = 1;
   return new Promise((res, rej) => cv.toBlob((b) => (b ? res(b) : rej(new Error('blob'))), 'image/png'));
 }
 

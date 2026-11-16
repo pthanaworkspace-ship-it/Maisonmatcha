@@ -210,3 +210,42 @@ a.kc-btn{text-decoration:none}
 .kc-msg .mp-links{margin-top:14px}
 .kc-fh-r b{font-size:.8rem;letter-spacing:.1em;white-space:nowrap}
 @media (max-width:370px){.kc-fh-r b{font-size:.72rem;letter-spacing:.06em}}
+
+/* ───── compact card (fits one phone screen) */
+.kc-face{padding-bottom:calc(var(--tuck) + 10px)}
+.kc-rule{margin:10px 0}
+.kc-lbl{font-size:.66rem;margin-top:4px}
+.kc-name{font-size:1.6rem;white-space:nowrap;overflow-wrap:anywhere;line-height:1.12;margin-top:2px}
+.kc-idrow{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:6px;flex-wrap:wrap}
+.kc-idrow .kc-lbl{margin:0}
+.kc-idrow .kc-id{margin:0;font-size:.95rem}
+.kc-plan{font-size:.86rem;margin-top:0}
+.kc-plan span{font-size:.74rem;margin-top:0}
+.kc-dots{max-width:230px;gap:8px 10px;margin:8px auto 4px}
+.kc-dot{max-width:36px}
+.kc-count{margin-top:2px;font-size:.85rem}
+.kc-count b{font-size:1.45rem}
+.kc-next{font-size:.78rem;margin-top:2px}
+.kc-next span{font-size:.76rem;margin-top:0}
+.kc-reward{margin:10px 0 2px;padding:12px}
+.kc-foot{grid-template-columns:1fr auto;gap:14px}
+.kc-foot-t{line-height:1.35}
+.kc-show-lo{font-family:'Noto Sans Lao',sans-serif;font-weight:600;font-size:.86rem}
+.kc-show{font-family:var(--serif);font-weight:600;font-size:.86rem;letter-spacing:.04em;margin-top:1px}
+.kc-since{font-family:var(--serif);font-weight:600;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;margin-top:10px;opacity:.85}
+.kc-since b{display:block;font-size:.95rem;letter-spacing:.02em;text-transform:none;font-variant-numeric:tabular-nums}
+.kc-since span{display:block;font-family:'Noto Sans Lao',sans-serif;font-weight:500;font-size:.7rem;letter-spacing:0;text-transform:none}
+.kc-qr{width:112px}
+.kc-stats-p{padding:12px 8px}
+.kc-stats-p .kc-stats{margin:0}
+@media (max-width:370px){.kc-qr{width:100px}.kc-name{font-size:1.4rem}}
+@media (min-width:720px){.kc-qr{width:124px}}
+.kc-name[style*="normal"]{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.kc-idrow{display:block;margin-top:4px}
+.kc-idrow .kc-id{display:block;margin-top:1px}
+.kc-reward{display:flex;align-items:center;gap:10px;text-align:left;margin:10px 0 2px;padding:10px 10px 10px 14px;border-radius:12px;flex-wrap:wrap}
+.kc-reward-x{flex:1 1 150px}
+.kc-reward-t{font-size:.8rem;letter-spacing:.06em;line-height:1.25}
+.kc-reward-lo{font-size:.78rem;margin-top:1px}
+.kc-reward-b{margin:0;min-height:40px;padding:6px 14px;font-size:.8rem;white-space:nowrap;flex:none}
+.kc-reward-n{flex-basis:100%;margin-top:4px;font-size:.76rem}
