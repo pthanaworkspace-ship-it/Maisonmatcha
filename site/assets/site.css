@@ -313,8 +313,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .mc-foot{position:relative;z-index:1;text-align:center;letter-spacing:.22em;font-size:.6rem;color:#4A5A40;margin-top:14px}
 /* ───── Maison Matcha Club (loyalty) */
 .club-hero h1{max-width:30rem;margin-inline:auto}
-.club-offer{font-family:var(--font-lao);font-size:1.25rem;font-weight:600;color:var(--green)!important;margin-top:14px!important}
-.club-offer .en{display:block;font-family:var(--font);font-size:.95rem;font-weight:500;letter-spacing:.04em;color:var(--muted)}
+.club-hero h1.club-offer{font-family:var(--font-lao);font-size:clamp(1.6rem,6vw,2.2rem);line-height:1.35;font-weight:600;color:var(--green)!important;margin-top:12px!important}
+.club-offer .en{display:block;font-family:var(--font);font-size:1rem;font-weight:500;letter-spacing:.04em;color:var(--muted)}
 html[lang="en"] .club-offer .en{display:block!important}
 .club-stamps{display:grid;grid-template-columns:repeat(5,44px);gap:12px;justify-content:center;margin:22px auto 6px}
 .club-stamps i{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--green);display:grid;place-items:center;background:var(--card)}
