@@ -3,6 +3,10 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/api/club/stock/:path*",
+      "destination": "https://npjzxcuhenbdzxquralv.supabase.co/functions/v1/stock/:path*"
+    },
+    {
       "source": "/api/club/:path*",
       "destination": "https://npjzxcuhenbdzxquralv.supabase.co/functions/v1/club/:path*"
     },
@@ -17,6 +21,10 @@
     {
       "source": "/staff/closing",
       "destination": "/staff-closing"
+    },
+    {
+      "source": "/staff/stock",
+      "destination": "/staff-stock"
     },
     {
       "source": "/staff/login",
